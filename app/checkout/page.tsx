@@ -1,7 +1,8 @@
 'use client'
+
 import { useState, useEffect } from 'react'
 import { ArrowLeft, CreditCard } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 export default function CheckoutPage() {
   const [item, setItem] = useState<any | null>(null)
@@ -15,19 +16,22 @@ export default function CheckoutPage() {
     country: ''
   })
   const [submitting, setSubmitting] = useState(false)
-  
+
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const type = searchParams.get('type')
-  const id = searchParams.get('id')
 
   useEffect(() => {
-    if (type && id) {
-      fetchItem()
-    }
-  }, [type, id])
+    const params = new URLSearchParams(window.location.search)
+    const type = params.get('type')
+    const id = params.get('id')
 
-  const fetchItem = async () => {
+    if (type && id) {
+      fetchItem(type, id)
+    } else {
+      setLoading(false)
+    }
+  }, [])
+
+  const fetchItem = async (type: string, id: string) => {
     try {
       const endpoint = type === 'product' ? `/api/products/${id}` : `/api/bundles/${id}`
       const response = await fetch(endpoint)
@@ -52,22 +56,19 @@ export default function CheckoutPage() {
     setSubmitting(true)
 
     try {
-      // Здесь будет логика создания заказа
+      const params = new URLSearchParams(window.location.search)
+      const type = params.get('type')
+      const id = params.get('id')
+
       const orderData = {
-        userId: '123456789', // Получаем из Telegram WebApp
-        items: [{
-          id: id,
-          type: type,
-          quantity: 1
-        }],
+        userId: '123456789', // TODO: заменить на реального пользователя из Telegram WebApp
+        items: [{ id, type, quantity: 1 }],
         ...formData
       }
 
       const response = await fetch('/api/orders', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       })
 

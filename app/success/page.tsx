@@ -1,18 +1,25 @@
 'use client'
-import { useEffect } from 'react'
+
+import { useEffect, useState } from 'react'
 import { CheckCircle, Home, MessageCircle } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 export default function SuccessPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const orderId = searchParams.get('orderId')
-  const method = searchParams.get('method')
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const [method, setMethod] = useState<string | null>(null)
 
   useEffect(() => {
-    // Здесь можно отправить уведомление админу о новом заказе
-    console.log('Order completed:', { orderId, method })
-  }, [orderId, method])
+    const params = new URLSearchParams(window.location.search)
+    setOrderId(params.get('orderId'))
+    setMethod(params.get('method'))
+
+    // Тут можно отправить уведомление админу
+    console.log('Order completed:', {
+      orderId: params.get('orderId'),
+      method: params.get('method'),
+    })
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center">
