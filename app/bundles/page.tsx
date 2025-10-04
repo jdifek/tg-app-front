@@ -15,7 +15,7 @@ export default function BundlesPage() {
 
   const fetchBundles = async () => {
     try {
-      const response = await fetch('/api/bundles')
+      const response = await fetch('http://localhost:3001/api/bundles')
       const data = await response.json()
       setBundles(data)
     } catch (error) {

@@ -19,7 +19,7 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
 
   const fetchBundle = async () => {
     try {
-      const response = await fetch(`/api/bundles/${params.id}`)
+      const response = await fetch(`http://localhost:3001/api/bundles/${params.id}`)
       const data = await response.json()
       setBundle(data)
     } catch (error) {

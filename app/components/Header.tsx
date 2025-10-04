@@ -16,8 +16,7 @@ export default function Header() {
   return (
     <div className="relative">
       {/* Баннер */}
-      <div className="h-32 bg-gradient-to-r from-purple-600 to-pink-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black bg-opacity-20" />
+      <div className="h-32  relative overflow-hidden">
       </div>
       
       {/* Профиль */}

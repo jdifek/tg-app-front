@@ -1,104 +1,95 @@
 'use client'
+
 import { useState, useEffect } from 'react'
 import { ArrowLeft, ShoppingCart } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
-interface ProductPageParams {
-  id: string;
-}
-
-export default function ProductPage({ params }: { params: ProductPageParams }) {
-  const [product, setProduct] = useState<any | null>(null)
+export default function ShopPage() {
+  const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    fetchProduct()
-  }, [params.id])
+    fetchProducts()
+  }, [])
 
-  const fetchProduct = async () => {
+  const fetchProducts = async () => {
     try {
-      const response = await fetch(`/api/products/${params.id}`)
+      const response = await fetch(`http://localhost:3001/api/products`)
       const data = await response.json()
-      setProduct(data)
+      setProducts(data)
     } catch (error) {
-      console.error('Error fetching product:', error)
+      console.error('Error fetching products:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleBuy = () => {
-    router.push(`/checkout?type=product&id=${params.id}`)
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
-        <div className="max-w-md mx-auto p-4 animate-pulse">
-          <div className="h-8 bg-gray-800 rounded mb-6" />
-          <div className="aspect-square bg-gray-800 rounded-xl mb-6" />
-          <div className="h-6 bg-gray-800 rounded mb-4" />
-          <div className="h-4 bg-gray-800 rounded mb-2" />
-          <div className="h-4 bg-gray-800 rounded w-3/4 mb-4" />
-          <div className="h-12 bg-gray-800 rounded" />
-        </div>
-      </div>
-    )
-  }
-
-  if (!product) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center">
-        <p className="text-gray-400">Product not found</p>
-      </div>
-    )
+  const handleBuy = (id: string) => {
+    router.push(`/checkout?type=product&id=${id}`)
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-6xl mx-auto p-4">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+        <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back</span>
           </button>
-          <h1 className="text-lg font-semibold truncate">{product.name}</h1>
+          <h1 className="text-2xl font-bold text-white">Shop</h1>
           <div className="w-10" />
         </div>
 
-        <div className="p-4">
-          {/* Product Image */}
-          <div className="aspect-square rounded-xl overflow-hidden mb-6">
-            <Image
-              src={product.image || '/api/placeholder/400/400'}
-              alt={product.name}
-              width={400}
-              height={400}
-              className="w-full h-full object-cover"
-            />
+        {/* Loading State */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-gray-800 rounded-xl p-3 animate-pulse">
+                <div className="aspect-square bg-gray-700 rounded-lg mb-2" />
+                <div className="h-4 bg-gray-700 rounded mb-1" />
+                <div className="h-3 bg-gray-700 rounded w-2/3" />
+              </div>
+            ))}
           </div>
-
-          {/* Product Info */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
-            <p className="text-3xl font-bold text-purple-400 mb-4">${product.price}</p>
-            <p className="text-gray-300 leading-relaxed">{product.description}</p>
+        ) : products.length === 0 ? (
+          <p className="text-gray-400 text-center mt-10">No products available</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                className="bg-gray-900 bg-opacity-50 rounded-xl p-3 border border-gray-800 flex flex-col"
+              >
+                <div className="aspect-square rounded-xl overflow-hidden mb-4 bg-gray-800">
+                  <Image
+                    src={product.image || '/api/placeholder/400/400'}
+                    alt={product.name}
+                    width={400}
+                    height={400}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h3 className="text-white font-semibold text-lg mb-1 truncate">
+                  {product.name}
+                </h3>
+                <p className="text-purple-400 font-bold text-lg mb-3">${product.price}</p>
+                <button
+                  onClick={() => handleBuy(product.id)}
+                  className="mt-auto w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-4 rounded-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-2"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Buy Now</span>
+                </button>
+              </div>
+            ))}
           </div>
-
-          {/* Buy Button */}
-          <button
-            onClick={handleBuy}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-2"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            <span>Buy Now</span>
-          </button>
-        </div>
+        )}
       </div>
     </div>
   )
