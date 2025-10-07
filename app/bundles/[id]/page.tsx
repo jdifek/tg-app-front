@@ -1,37 +1,38 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { ArrowLeft, Package, Download } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+"use client";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Package, Download } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { apiFetch } from "@/app/http";
 
 interface BundlePageParams {
   id: string;
 }
 
 export default function BundlePage({ params }: { params: BundlePageParams }) {
-  const [bundle, setBundle] = useState<any | null>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+  const [bundle, setBundle] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchBundle()
-  }, [params.id])
+    fetchBundle();
+  }, [params.id]);
 
   const fetchBundle = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/bundles/${params.id}`)
-      const data = await response.json()
-      setBundle(data)
+      const response = await apiFetch(`/api/bundles/${params.id}`);
+      const data = await response.json();
+      setBundle(data);
     } catch (error) {
-      console.error('Error fetching bundle:', error)
+      console.error("Error fetching bundle:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleBuy = () => {
-    router.push(`/checkout?type=bundle&id=${params.id}`)
-  }
+    router.push(`/checkout?type=bundle&id=${params.id}`);
+  };
 
   if (loading) {
     return (
@@ -46,7 +47,7 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!bundle) {
@@ -54,10 +55,10 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
       <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center">
         <p className="text-gray-400">Bundle not found</p>
       </div>
-    )
+    );
   }
 
-  const content = bundle.content ? JSON.parse(bundle.content) : {}
+  const content = bundle.content ? JSON.parse(bundle.content) : {};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
@@ -78,7 +79,7 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
           {/* Bundle Image */}
           <div className="aspect-square rounded-xl overflow-hidden mb-6">
             <Image
-              src={bundle.image || '/api/placeholder/400/400'}
+              src={bundle.image || "/api/placeholder/400/400"}
               alt={bundle.name}
               width={400}
               height={400}
@@ -89,9 +90,11 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
           {/* Bundle Info */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold mb-2">{bundle.name}</h1>
-            <p className="text-3xl font-bold text-purple-400 mb-4">${bundle.price}</p>
+            <p className="text-3xl font-bold text-purple-400 mb-4">
+              ${bundle.price}
+            </p>
             <p className="text-gray-300 mb-4">{bundle.description}</p>
-            
+
             {/* Content Details */}
             {content && Object.keys(content).length > 0 && (
               <div className="bg-gray-900 bg-opacity-50 rounded-xl p-4 border border-gray-800">
@@ -121,7 +124,8 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
               Delivery Information
             </h3>
             <p className="text-gray-300 text-sm">
-              Digital content will be sent to your bot chat immediately after payment confirmation.
+              Digital content will be sent to your bot chat immediately after
+              payment confirmation.
             </p>
           </div>
 
@@ -136,5 +140,5 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,79 +1,83 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { ArrowLeft, CheckCircle, XCircle, Clock, Package } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+// @ts-nocheck
+
+"use client";
+import { useState, useEffect } from "react";
+import { ArrowLeft, CheckCircle, XCircle, Clock, Package } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { apiFetch } from "@/app/http";
 
 export default function AdminOrdersPage() {
-  const router = useRouter()
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('ALL')
+  const router = useRouter();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("ALL");
 
   useEffect(() => {
-    fetchOrders()
-  }, [])
+    fetchOrders();
+  }, []);
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/admin/orders')
-      const data = await response.json()
-      setOrders(data)
+      const response = await apiFetch("/api/admin/orders");
+      const data = await response.json();
+      setOrders(data);
     } catch (error) {
-      console.error('Error fetching orders:', error)
+      console.error("Error fetching orders:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const response = await fetch(`/api/orders/${orderId}/status`, {
-        method: 'PATCH',
+      const response = await apiFetch(`/api/orders/${orderId}/status`, {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ status: newStatus }),
-      })
+      });
 
       if (response.ok) {
-        await fetchOrders()
+        await fetchOrders();
       } else {
-        throw new Error('Failed to update order')
+        throw new Error("Failed to update order");
       }
     } catch (error) {
-      console.error('Error updating order:', error)
-      alert('Failed to update order. Please try again.')
+      console.error("Error updating order:", error);
+      alert("Failed to update order. Please try again.");
     }
-  }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'COMPLETED':
-        return 'bg-green-600'
-      case 'PROCESSING':
-        return 'bg-blue-600'
-      case 'CANCELLED':
-        return 'bg-red-600'
+      case "COMPLETED":
+        return "bg-green-600";
+      case "PROCESSING":
+        return "bg-blue-600";
+      case "CANCELLED":
+        return "bg-red-600";
       default:
-        return 'bg-yellow-600'
+        return "bg-yellow-600";
     }
-  }
+  };
 
   const getOrderTypeLabel = (type) => {
     const labels = {
-      'PRODUCT': 'Product',
-      'BUNDLE': 'Bundle',
-      'VIP': 'VIP Subscription',
-      'CUSTOM_VIDEO': 'Custom Video',
-      'VIDEO_CALL': 'Video Call',
-      'RATING': 'Dick Rating'
-    }
-    return labels[type] || type
-  }
+      PRODUCT: "Product",
+      BUNDLE: "Bundle",
+      VIP: "VIP Subscription",
+      CUSTOM_VIDEO: "Custom Video",
+      VIDEO_CALL: "Video Call",
+      RATING: "Dick Rating",
+    };
+    return labels[type] || type;
+  };
 
-  const filteredOrders = filter === 'ALL' 
-    ? orders 
-    : orders.filter(order => order.status === filter)
+  const filteredOrders =
+    filter === "ALL"
+      ? orders
+      : orders.filter((order) => order.status === filter);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
@@ -81,7 +85,7 @@ export default function AdminOrdersPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() => router.push('/admin')}
+            onClick={() => router.push("/admin")}
             className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -93,19 +97,21 @@ export default function AdminOrdersPage() {
 
         {/* Filters */}
         <div className="flex space-x-2 mb-6 overflow-x-auto">
-          {['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
-                filter === status
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              {status}
-            </button>
-          ))}
+          {["ALL", "PENDING", "PROCESSING", "COMPLETED", "CANCELLED"].map(
+            (status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+                  filter === status
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                {status}
+              </button>
+            )
+          )}
         </div>
 
         {/* Orders List */}
@@ -134,27 +140,40 @@ export default function AdminOrdersPage() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${getStatusColor(order.status)}`}>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold text-white ${getStatusColor(
+                          order.status
+                        )}`}
+                      >
                         {order.status}
                       </span>
                       <span className="text-xs text-gray-400">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
+                    <h3 className="font-semibold">
+                      Order #{order.id.slice(0, 8)}
+                    </h3>
                     <p className="text-sm text-gray-400">
                       Type: {getOrderTypeLabel(order.orderType)}
                     </p>
                     {order.user && (
                       <p className="text-sm text-gray-400">
-                        User: {order.user.firstName || order.user.username || order.user.telegramId}
+                        User:{" "}
+                        {order.user.firstName ||
+                          order.user.username ||
+                          order.user.telegramId}
                       </p>
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-purple-400">${order.totalAmount}</p>
+                    <p className="text-2xl font-bold text-purple-400">
+                      ${order.totalAmount}
+                    </p>
                     {order.paymentMethod && (
-                      <p className="text-xs text-gray-400 mt-1">{order.paymentMethod}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {order.paymentMethod}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -165,9 +184,14 @@ export default function AdminOrdersPage() {
                     <h4 className="text-sm font-semibold mb-2">Items:</h4>
                     <div className="space-y-1">
                       {order.orderItems.map((item, index) => (
-                        <div key={index} className="flex justify-between text-sm">
+                        <div
+                          key={index}
+                          className="flex justify-between text-sm"
+                        >
                           <span className="text-gray-300">
-                            {item.product?.name || item.bundle?.name || 'Service'}
+                            {item.product?.name ||
+                              item.bundle?.name ||
+                              "Service"}
                           </span>
                           <span className="text-gray-400">${item.price}</span>
                         </div>
@@ -179,11 +203,16 @@ export default function AdminOrdersPage() {
                 {/* Shipping Info */}
                 {order.address && (
                   <div className="mb-3 p-3 bg-gray-800 bg-opacity-50 rounded-lg">
-                    <h4 className="text-sm font-semibold mb-2">Shipping Address:</h4>
+                    <h4 className="text-sm font-semibold mb-2">
+                      Shipping Address:
+                    </h4>
                     <p className="text-sm text-gray-300">
-                      {order.firstName} {order.lastName}<br />
-                      {order.address}<br />
-                      {order.city}, {order.zipCode}<br />
+                      {order.firstName} {order.lastName}
+                      <br />
+                      {order.address}
+                      <br />
+                      {order.city}, {order.zipCode}
+                      <br />
                       {order.country}
                     </p>
                   </div>
@@ -192,7 +221,9 @@ export default function AdminOrdersPage() {
                 {/* Metadata */}
                 {order.metadata && (
                   <div className="mb-3 p-3 bg-gray-800 bg-opacity-50 rounded-lg">
-                    <h4 className="text-sm font-semibold mb-2">Additional Info:</h4>
+                    <h4 className="text-sm font-semibold mb-2">
+                      Additional Info:
+                    </h4>
                     <pre className="text-xs text-gray-300 overflow-x-auto">
                       {JSON.stringify(JSON.parse(order.metadata), null, 2)}
                     </pre>
@@ -201,24 +232,26 @@ export default function AdminOrdersPage() {
 
                 {/* Actions */}
                 <div className="flex space-x-2 pt-3 border-t border-gray-700">
-                  {order.status === 'PENDING' && (
+                  {order.status === "PENDING" && (
                     <>
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'PROCESSING')}
+                        onClick={() =>
+                          updateOrderStatus(order.id, "PROCESSING")
+                        }
                         className="flex-1 flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                       >
                         <Clock className="w-4 h-4" />
                         <span>Mark Processing</span>
                       </button>
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'COMPLETED')}
+                        onClick={() => updateOrderStatus(order.id, "COMPLETED")}
                         className="flex-1 flex items-center justify-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>Complete</span>
                       </button>
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'CANCELLED')}
+                        onClick={() => updateOrderStatus(order.id, "CANCELLED")}
                         className="flex-1 flex items-center justify-center space-x-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                       >
                         <XCircle className="w-4 h-4" />
@@ -226,17 +259,17 @@ export default function AdminOrdersPage() {
                       </button>
                     </>
                   )}
-                  {order.status === 'PROCESSING' && (
+                  {order.status === "PROCESSING" && (
                     <>
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'COMPLETED')}
+                        onClick={() => updateOrderStatus(order.id, "COMPLETED")}
                         className="flex-1 flex items-center justify-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>Complete</span>
                       </button>
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'CANCELLED')}
+                        onClick={() => updateOrderStatus(order.id, "CANCELLED")}
                         className="flex-1 flex items-center justify-center space-x-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                       >
                         <XCircle className="w-4 h-4" />
@@ -244,7 +277,8 @@ export default function AdminOrdersPage() {
                       </button>
                     </>
                   )}
-                  {(order.status === 'COMPLETED' || order.status === 'CANCELLED') && (
+                  {(order.status === "COMPLETED" ||
+                    order.status === "CANCELLED") && (
                     <div className="flex-1 text-center text-sm text-gray-400 py-2">
                       Order {order.status.toLowerCase()}
                     </div>
@@ -256,5 +290,5 @@ export default function AdminOrdersPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

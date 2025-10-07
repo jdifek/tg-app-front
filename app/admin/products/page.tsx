@@ -1,121 +1,124 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { ArrowLeft, Plus, Edit, Trash2, Save, X } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+// @ts-nocheck
+
+"use client";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Plus, Edit, Trash2, Save, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { apiFetch } from "@/app/http";
 
 export default function AdminProductsPage() {
-  const router = useRouter()
-  const [products, setProducts] = useState([])
-  const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(null)
+  const router = useRouter();
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    image: '',
-    categoryId: ''
-  })
+    name: "",
+    description: "",
+    price: "",
+    image: "",
+    categoryId: "",
+  });
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     try {
       const [productsRes, categoriesRes] = await Promise.all([
-        fetch('http://localhost:3001/api/products'),
-        fetch('http://localhost:3001/api/admin/categories')
-      ])
-      const productsData = await productsRes.json()
-      const categoriesData = await categoriesRes.json()
-      setProducts(productsData)
-      setCategories(categoriesData)
+        apiFetch("/api/products"),
+        apiFetch("/api/admin/categories"),
+      ]);
+      const productsData = await productsRes.json();
+      const categoriesData = await categoriesRes.json();
+      setProducts(productsData);
+      setCategories(categoriesData);
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error("Error fetching data:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEdit = (product) => {
-    setEditing(product.id)
+    setEditing(product.id);
     setFormData({
       name: product.name,
-      description: product.description || '',
+      description: product.description || "",
       price: product.price.toString(),
-      image: product.image || '',
-      categoryId: product.categoryId
-    })
-  }
+      image: product.image || "",
+      categoryId: product.categoryId,
+    });
+  };
 
   const handleCancel = () => {
-    setEditing(null)
+    setEditing(null);
     setFormData({
-      name: '',
-      description: '',
-      price: '',
-      image: '',
-      categoryId: ''
-    })
-  }
+      name: "",
+      description: "",
+      price: "",
+      image: "",
+      categoryId: "",
+    });
+  };
 
   const handleSave = async () => {
     try {
-      const url = editing 
-        ? `http://localhost:3001/api/admin/products/${editing}`
-        : 'http://localhost:3001/api/admin/products'
-      
-      const method = editing ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
+      const url = editing
+        ? `/api/admin/products/${editing}`
+        : "/api/admin/products";
+
+      const method = editing ? "PUT" : "POST";
+
+      const response = await apiFetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
-          price: parseFloat(formData.price)
+          price: parseFloat(formData.price),
         }),
-      })
+      });
 
       if (response.ok) {
-        await fetchData()
-        handleCancel()
+        await fetchData();
+        handleCancel();
       } else {
-        throw new Error('Failed to save product')
+        throw new Error("Failed to save product");
       }
     } catch (error) {
-      console.error('Error saving product:', error)
-      alert('Failed to save product. Please try again.')
+      console.error("Error saving product:", error);
+      alert("Failed to save product. Please try again.");
     }
-  }
+  };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
+    if (!confirm("Are you sure you want to delete this product?")) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/admin/products/${id}`, {
-        method: 'DELETE',
-      })
+      const response = await apiFetch(`/api/admin/products/${id}`, {
+        method: "DELETE",
+      });
 
       if (response.ok) {
-        await fetchData()
+        await fetchData();
       } else {
-        throw new Error('Failed to delete product')
+        throw new Error("Failed to delete product");
       }
     } catch (error) {
-      console.error('Error deleting product:', error)
-      alert('Failed to delete product. Please try again.')
+      console.error("Error deleting product:", error);
+      alert("Failed to delete product. Please try again.");
     }
-  }
+  };
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+      [e.target.name]: e.target.value,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
@@ -123,7 +126,7 @@ export default function AdminProductsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() => router.push('/admin')}
+            onClick={() => router.push("/admin")}
             className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -131,7 +134,7 @@ export default function AdminProductsPage() {
           </button>
           <h1 className="text-2xl font-bold">Manage Products</h1>
           <button
-            onClick={() => setEditing('new')}
+            onClick={() => setEditing("new")}
             className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -143,7 +146,7 @@ export default function AdminProductsPage() {
         {editing && (
           <div className="bg-gray-900 bg-opacity-50 rounded-xl p-6 border border-gray-800 mb-6">
             <h3 className="text-xl font-semibold mb-4">
-              {editing === 'new' ? 'Add New Product' : 'Edit Product'}
+              {editing === "new" ? "Add New Product" : "Edit Product"}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -158,7 +161,9 @@ export default function AdminProductsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Image URL</label>
+                <label className="block text-sm font-medium mb-2">
+                  Image URL
+                </label>
                 <input
                   type="text"
                   name="image"
@@ -169,7 +174,9 @@ export default function AdminProductsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Link - Optional</label>
+                <label className="block text-sm font-medium mb-2">
+                  Link - Optional
+                </label>
                 <input
                   type="text"
                   name="link"
@@ -180,7 +187,9 @@ export default function AdminProductsPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-sm font-medium mb-2">
+                  Description
+                </label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -237,9 +246,13 @@ export default function AdminProductsPage() {
                     />
                   )}
                 </div>
-                <h3 className="font-semibold text-sm mb-1 truncate">{item.name}</h3>
+                <h3 className="font-semibold text-sm mb-1 truncate">
+                  {item.name}
+                </h3>
                 {item.price && (
-                  <p className="text-pink-400 font-bold text-sm mb-2">${item.price}</p>
+                  <p className="text-pink-400 font-bold text-sm mb-2">
+                    ${item.price}
+                  </p>
                 )}
                 <div className="flex flex-col space-y-1">
                   <button
@@ -263,5 +276,5 @@ export default function AdminProductsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

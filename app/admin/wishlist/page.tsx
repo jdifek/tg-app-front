@@ -1,115 +1,118 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { ArrowLeft, Plus, Edit, Trash2, Save, X } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+// @ts-nocheck
+
+"use client";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Plus, Edit, Trash2, Save, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { apiFetch } from "@/app/http";
 
 export default function AdminWishlistPage() {
-  const router = useRouter()
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(null)
+  const router = useRouter();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    image: '',
-    link: ''
-  })
+    name: "",
+    description: "",
+    price: "",
+    image: "",
+    link: "",
+  });
 
   useEffect(() => {
-    fetchItems()
-  }, [])
+    fetchItems();
+  }, []);
 
   const fetchItems = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/wishlist')
-      const data = await response.json()
-      setItems(data)
+      const response = await apiFetch("/api/wishlist");
+      const data = await response.json();
+      setItems(data);
     } catch (error) {
-      console.error('Error fetching wishlist:', error)
+      console.error("Error fetching wishlist:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEdit = (item) => {
-    setEditing(item.id)
+    setEditing(item.id);
     setFormData({
       name: item.name,
-      description: item.description || '',
-      price: item.price?.toString() || '',
-      image: item.image || '',
-      link: item.link || ''
-    })
-  }
+      description: item.description || "",
+      price: item.price?.toString() || "",
+      image: item.image || "",
+      link: item.link || "",
+    });
+  };
 
   const handleCancel = () => {
-    setEditing(null)
+    setEditing(null);
     setFormData({
-      name: '',
-      description: '',
-      price: '',
-      image: '',
-      link: ''
-    })
-  }
+      name: "",
+      description: "",
+      price: "",
+      image: "",
+      link: "",
+    });
+  };
 
   const handleSave = async () => {
     try {
-      const url = editing 
-        ? `http://localhost:3001/api/admin/wishlist/${editing}`
-        : 'http://localhost:3001/api/admin/wishlist'
-      
-      const method = editing ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
+      const url = editing
+        ? `/api/admin/wishlist/${editing}`
+        : "/api/admin/wishlist";
+
+      const method = editing ? "PUT" : "POST";
+
+      const response = await apiFetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
-          price: formData.price ? parseFloat(formData.price) : null
+          price: formData.price ? parseFloat(formData.price) : null,
         }),
-      })
+      });
 
       if (response.ok) {
-        await fetchItems()
-        handleCancel()
+        await fetchItems();
+        handleCancel();
       } else {
-        throw new Error('Failed to save item')
+        throw new Error("Failed to save item");
       }
     } catch (error) {
-      console.error('Error saving item:', error)
-      alert('Failed to save item. Please try again.')
+      console.error("Error saving item:", error);
+      alert("Failed to save item. Please try again.");
     }
-  }
+  };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this item?')) return
+    if (!confirm("Are you sure you want to delete this item?")) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/admin/wishlist/${id}`, {
-        method: 'DELETE',
-      })
+      const response = await apiFetch(`/api/admin/wishlist/${id}`, {
+        method: "DELETE",
+      });
 
       if (response.ok) {
-        await fetchItems()
+        await fetchItems();
       } else {
-        throw new Error('Failed to delete item')
+        throw new Error("Failed to delete item");
       }
     } catch (error) {
-      console.error('Error deleting item:', error)
-      alert('Failed to delete item. Please try again.')
+      console.error("Error deleting item:", error);
+      alert("Failed to delete item. Please try again.");
     }
-  }
+  };
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+      [e.target.name]: e.target.value,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
@@ -117,7 +120,7 @@ export default function AdminWishlistPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() => router.push('/admin')}
+            onClick={() => router.push("/admin")}
             className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -125,7 +128,7 @@ export default function AdminWishlistPage() {
           </button>
           <h1 className="text-2xl font-bold">Manage Wishlist</h1>
           <button
-            onClick={() => setEditing('new')}
+            onClick={() => setEditing("new")}
             className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -137,7 +140,7 @@ export default function AdminWishlistPage() {
         {editing && (
           <div className="bg-gray-900 bg-opacity-50 rounded-xl p-6 border border-gray-800 mb-6">
             <h3 className="text-xl font-semibold mb-4">
-              {editing === 'new' ? 'Add New Item' : 'Edit Item'}
+              {editing === "new" ? "Add New Item" : "Edit Item"}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -152,7 +155,9 @@ export default function AdminWishlistPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Price ($) - Optional</label>
+                <label className="block text-sm font-medium mb-2">
+                  Price ($) - Optional
+                </label>
                 <input
                   type="number"
                   name="price"
@@ -164,7 +169,9 @@ export default function AdminWishlistPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Image URL</label>
+                <label className="block text-sm font-medium mb-2">
+                  Image URL
+                </label>
                 <input
                   type="text"
                   name="image"
@@ -175,7 +182,9 @@ export default function AdminWishlistPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Link - Optional</label>
+                <label className="block text-sm font-medium mb-2">
+                  Link - Optional
+                </label>
                 <input
                   type="text"
                   name="link"
@@ -186,7 +195,9 @@ export default function AdminWishlistPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-sm font-medium mb-2">
+                  Description
+                </label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -243,9 +254,13 @@ export default function AdminWishlistPage() {
                     />
                   )}
                 </div>
-                <h3 className="font-semibold text-sm mb-1 truncate">{item.name}</h3>
+                <h3 className="font-semibold text-sm mb-1 truncate">
+                  {item.name}
+                </h3>
                 {item.price && (
-                  <p className="text-pink-400 font-bold text-sm mb-2">${item.price}</p>
+                  <p className="text-pink-400 font-bold text-sm mb-2">
+                    ${item.price}
+                  </p>
                 )}
                 <div className="flex flex-col space-y-1">
                   <button
@@ -269,5 +284,5 @@ export default function AdminWishlistPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

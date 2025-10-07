@@ -1,90 +1,92 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { ArrowLeft, CreditCard } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from "react";
+import { ArrowLeft, CreditCard } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { apiFetch } from "../http";
 
 export default function CheckoutPage() {
-  const [item, setItem] = useState<any | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [item, setItem] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    address: '',
-    city: '',
-    zipCode: '',
-    country: ''
-  })
-  const [submitting, setSubmitting] = useState(false)
+    firstName: "",
+    lastName: "",
+    address: "",
+    city: "",
+    zipCode: "",
+    country: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
 
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const type = params.get('type')
-    const id = params.get('id')
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get("type");
+    const id = params.get("id");
 
     if (type && id) {
-      fetchItem(type, id)
+      fetchItem(type, id);
     } else {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   const fetchItem = async (type: string, id: string) => {
     try {
-      const endpoint = type === 'product' ? `/api/products/${id}` : `/api/bundles/${id}`
-      const response = await fetch(endpoint)
-      const data = await response.json()
-      setItem(data)
+      const endpoint =
+        type === "product" ? `/api/products/${id}` : `/api/bundles/${id}`;
+      const response = await apiFetch(endpoint);
+      const data = await response.json();
+      setItem(data);
     } catch (error) {
-      console.error('Error fetching item:', error)
+      console.error("Error fetching item:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (e: any) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e: any) => {
-    e.preventDefault()
-    setSubmitting(true)
+    e.preventDefault();
+    setSubmitting(true);
 
     try {
-      const params = new URLSearchParams(window.location.search)
-      const type = params.get('type')
-      const id = params.get('id')
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get("type");
+      const id = params.get("id");
 
       const orderData = {
-        userId: '123456789', // TODO: заменить на реального пользователя из Telegram WebApp
+        userId: "123456789", // TODO: заменить на реального пользователя из Telegram WebApp
         items: [{ id, type, quantity: 1 }],
-        ...formData
-      }
+        ...formData,
+      };
 
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
-      })
+      const response = await apiFetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
 
       if (response.ok) {
-        const order = await response.json()
-        router.push(`/payment?orderId=${order.id}`)
+        const order = await response.json();
+        router.push(`/payment?orderId=${order.id}`);
       } else {
-        throw new Error('Failed to create order')
+        throw new Error("Failed to create order");
       }
     } catch (error) {
-      console.error('Error creating order:', error)
-      alert('Failed to create order. Please try again.')
+      console.error("Error creating order:", error);
+      alert("Failed to create order. Please try again.");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -98,7 +100,7 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -131,7 +133,9 @@ export default function CheckoutPage() {
           {/* Shipping Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">First Name</label>
+              <label className="block text-sm font-medium mb-2">
+                First Name
+              </label>
               <input
                 type="text"
                 name="firstName"
@@ -143,7 +147,9 @@ export default function CheckoutPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Last Name</label>
+              <label className="block text-sm font-medium mb-2">
+                Last Name
+              </label>
               <input
                 type="text"
                 name="lastName"
@@ -180,7 +186,9 @@ export default function CheckoutPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">ZIP Code</label>
+                <label className="block text-sm font-medium mb-2">
+                  ZIP Code
+                </label>
                 <input
                   type="text"
                   name="zipCode"
@@ -211,11 +219,13 @@ export default function CheckoutPage() {
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center space-x-2"
             >
               <CreditCard className="w-5 h-5" />
-              <span>{submitting ? 'Processing...' : 'Continue to Payment'}</span>
+              <span>
+                {submitting ? "Processing..." : "Continue to Payment"}
+              </span>
             </button>
           </form>
         </div>
       </div>
     </div>
-  )
+  );
 }
