@@ -1,5 +1,4 @@
 // @ts-nocheck
-
 "use client";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Plus, Edit, Trash2, Save, X } from "lucide-react";
@@ -9,15 +8,13 @@ import { apiFetch } from "@/app/http";
 export default function AdminProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
     price: "",
     image: "",
-    categoryId: "",
+    description: "",
   });
 
   useEffect(() => {
@@ -26,14 +23,9 @@ export default function AdminProductsPage() {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes] = await Promise.all([
-        apiFetch("/api/products"),
-        apiFetch("/api/admin/categories"),
-      ]);
+      const productsRes = await apiFetch("/api/products");
       const productsData = await productsRes.json();
-      const categoriesData = await categoriesRes.json();
       setProducts(productsData);
-      setCategories(categoriesData);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -45,10 +37,9 @@ export default function AdminProductsPage() {
     setEditing(product.id);
     setFormData({
       name: product.name,
-      description: product.description || "",
       price: product.price.toString(),
       image: product.image || "",
-      categoryId: product.categoryId,
+      description: product.description || "",
     });
   };
 
@@ -56,30 +47,29 @@ export default function AdminProductsPage() {
     setEditing(null);
     setFormData({
       name: "",
-      description: "",
       price: "",
       image: "",
-      categoryId: "",
+      description: "",
     });
   };
 
   const handleSave = async () => {
     try {
-      const url = editing
-        ? `/api/admin/products/${editing}`
-        : "/api/admin/products";
+      const url = editing === "new"
+        ? "/api/admin/products"
+        : `/api/admin/products/${editing}`;
 
-      const method = editing ? "PUT" : "POST";
+      const method = editing === "new" ? "POST" : "PUT";
+
+      const productData = {
+        ...formData,
+        price: formData.price ? parseFloat(formData.price) : 0,
+      };
 
       const response = await apiFetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(productData),
       });
 
       if (response.ok) {
@@ -157,13 +147,23 @@ export default function AdminProductsPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                  placeholder="0.00"
+                  placeholder="Product name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Image URL
-                </label>
+                <label className="block text-sm font-medium mb-2">Price</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">Image URL</label>
                 <input
                   type="text"
                   name="image"
@@ -173,23 +173,8 @@ export default function AdminProductsPage() {
                   placeholder="https://..."
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Link - Optional
-                </label>
-                <input
-                  type="text"
-                  name="link"
-                  value={formData.link}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                  placeholder="https://..."
-                />
-              </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">
-                  Description
-                </label>
+                <label className="block text-sm font-medium mb-2">Description</label>
                 <textarea
                   name="description"
                   value={formData.description}
