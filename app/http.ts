@@ -8,10 +8,10 @@ export async function apiFetch(path: string, options?: RequestInit) {
   const res = await fetch(`${API_URL}${path}`, options);
 
   if (!res.ok) {
-    // можно выбросить ошибку с текстом ответа
     const errorText = await res.text();
     throw new Error(`API Error: ${res.status} ${errorText}`);
   }
 
-  return res.json();
+  // Возвращаем Response, чтобы можно было потом вызвать response.json()
+  return res;
 }
