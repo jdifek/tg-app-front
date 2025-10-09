@@ -1,9 +1,19 @@
 'use client'
-import { useState, useEffect } from 'react'
+
+import { Suspense, useState, useEffect } from 'react'
 import { ArrowLeft, CreditCard, Smartphone, DollarSign, Star } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function PaymentPage() {
+// ✅ Оборачиваем компонент в Suspense
+export default function PaymentPageWrapper() {
+  return (
+    <Suspense fallback={<div className="text-center text-white p-10">Loading...</div>}>
+      <PaymentPage />
+    </Suspense>
+  )
+}
+
+function PaymentPage() {
   const [order, setOrder] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedMethod, setSelectedMethod] = useState('')
@@ -14,7 +24,7 @@ export default function PaymentPage() {
 
   useEffect(() => {
     if (orderId) {
-      // В реальном приложении здесь будет запрос к API для получения информации о заказе
+      // имитация запроса на получение данных заказа
       setOrder({
         id: orderId,
         total: 29.99,
@@ -55,12 +65,11 @@ export default function PaymentPage() {
     }
   ]
 
-  const handlePayment = (methodId: any) => {
+  const handlePayment = (methodId: string) => {
     setSelectedMethod(methodId)
-    // В реальном приложении здесь будет логика для обработки оплаты
     console.log(`Processing payment with ${methodId}`)
     
-    // Имитация успешной оплаты
+    // имитация успешной оплаты
     setTimeout(() => {
       router.push(`/success?orderId=${orderId}&method=${methodId}`)
     }, 2000)
@@ -92,7 +101,7 @@ export default function PaymentPage() {
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-xl font-bold">Payment</h1>
+          <h1 className="text-xl font-bold text-white">Payment</h1>
           <div className="w-10" />
         </div>
 
@@ -100,9 +109,9 @@ export default function PaymentPage() {
           {/* Order Summary */}
           {order && (
             <div className="bg-gray-900 bg-opacity-50 rounded-xl p-4 border border-gray-800 mb-6">
-              <h3 className="font-semibold mb-3">Order Summary</h3>
-              <div className="space-y-2">
-                {order.items?.map((item: any, index: any) => (
+              <h3 className="font-semibold mb-3 text-white">Order Summary</h3>
+              <div className="space-y-2 text-white">
+                {order.items?.map((item: any, index: number) => (
                   <div key={index} className="flex justify-between">
                     <span>{item.name}</span>
                     <span>${item.price}</span>
@@ -120,7 +129,7 @@ export default function PaymentPage() {
 
           {/* Payment Methods */}
           <div className="space-y-3">
-            <h3 className="font-semibold mb-4">Choose Payment Method</h3>
+            <h3 className="font-semibold mb-4 text-white">Choose Payment Method</h3>
             {paymentMethods.map((method) => {
               const Icon = method.icon
               return (
