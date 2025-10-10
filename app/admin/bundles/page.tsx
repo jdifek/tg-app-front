@@ -14,9 +14,11 @@ export default function AdminBundlesPage() {
     name: "",
     description: "",
     price: "",
-    content: "",
-    imageFile: null, // для файла
-    image: "", // для отображения текущей картинки
+    photos: "",
+    videos: "",
+    exclusive: false,
+    imageFile: null,
+    image: "",
   });
 
   useEffect(() => {
@@ -41,7 +43,9 @@ export default function AdminBundlesPage() {
       name: bundle.name,
       description: bundle.description || "",
       price: bundle.price.toString(),
-      content: bundle.content || "",
+      photos: bundle.photos?.toString() || "",
+      videos: bundle.videos?.toString() || "",
+      exclusive: !!bundle.exclusive,
       image: bundle.image || "",
       imageFile: null,
     });
@@ -53,7 +57,9 @@ export default function AdminBundlesPage() {
       name: "",
       description: "",
       price: "",
-      content: "",
+      photos: "",
+      videos: "",
+      exclusive: false,
       image: "",
       imageFile: null,
     });
@@ -61,25 +67,17 @@ export default function AdminBundlesPage() {
 
   const handleSave = async () => {
     try {
-      const isNew = editing === "new"; // true, если добавляем новый
-      const url = isNew
-        ? "/api/admin/bundles"
-        : `/api/admin/bundles/${editing}`;
+      const isNew = editing === "new";
+      const url = isNew ? "/api/admin/bundles" : `/api/admin/bundles/${editing}`;
       const method = isNew ? "POST" : "PUT";
 
       const fd = new FormData();
       fd.append("name", formData.name);
       fd.append("description", formData.description);
       fd.append("price", formData.price);
-      if (formData.content) {
-        try {
-          const parsed = JSON.parse(formData.content); // проверяем, что JSON валиден
-          fd.append("content", JSON.stringify(parsed));
-        } catch (e) {
-          alert("Content field contains invalid JSON");
-          return;
-        }
-      }
+      fd.append("photos", formData.photos);
+      fd.append("videos", formData.videos);
+      fd.append("exclusive", formData.exclusive ? "true" : "false");
       if (formData.imageFile) fd.append("image", formData.imageFile);
 
       const response = await apiFetch(url, { method, body: fd });
@@ -116,8 +114,11 @@ export default function AdminBundlesPage() {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
   const handleFileChange = (e) => {
@@ -163,13 +164,10 @@ export default function AdminBundlesPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                  placeholder="Bundle name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Price ($)
-                </label>
+                <label className="block text-sm font-medium mb-2">Price ($)</label>
                 <input
                   type="number"
                   name="price"
@@ -177,34 +175,47 @@ export default function AdminBundlesPage() {
                   onChange={handleInputChange}
                   step="0.01"
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                  placeholder="0.00"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">
-                  Description
-                </label>
+                <label className="block text-sm font-medium mb-2">Description</label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  rows="3"
+                  rows={3}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                  placeholder="Bundle description"
                 />
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">
-                  Content (JSON format)
-                </label>
-                <textarea
-                  name="content"
-                  value={formData.content}
+              <div>
+                <label className="block text-sm font-medium mb-2">Photos</label>
+                <input
+                  type="number"
+                  name="photos"
+                  value={formData.photos}
                   onChange={handleInputChange}
-                  rows="3"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500 font-mono text-sm"
-                  placeholder='{"photos":50,"videos":10,"exclusive":true}'
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Videos</label>
+                <input
+                  type="number"
+                  name="videos"
+                  value={formData.videos}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              <div className="md:col-span-2 flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="exclusive"
+                  checked={formData.exclusive}
+                  onChange={handleInputChange}
+                  className="w-5 h-5"
+                />
+                <label className="text-sm font-medium">Exclusive Content</label>
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">Image</label>
@@ -292,6 +303,10 @@ export default function AdminBundlesPage() {
                     </p>
                     <p className="text-sm text-gray-400 line-clamp-2">
                       {bundle.description}
+                    </p>
+                    <p className="text-gray-300 text-sm">
+                      📸 {bundle.photos || 0} | 🎥 {bundle.videos || 0}{" "}
+                      {bundle.exclusive ? "| ⭐ Exclusive" : ""}
                     </p>
                   </div>
                 </div>

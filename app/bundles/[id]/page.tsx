@@ -58,8 +58,6 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
     );
   }
 
-  const content = bundle.content ? JSON.parse(bundle.content) : {};
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
       <div className="max-w-md mx-auto">
@@ -96,25 +94,23 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
             <p className="text-gray-300 mb-4">{bundle.description}</p>
 
             {/* Content Details */}
-            {content && Object.keys(content).length > 0 && (
-              <div className="bg-gray-900 bg-opacity-50 rounded-xl p-4 border border-gray-800">
-                <h3 className="font-semibold mb-3 flex items-center">
-                  <Package className="w-4 h-4 mr-2" />
-                  What's included:
-                </h3>
-                <div className="space-y-2">
-                  {content.photos && (
-                    <p className="text-gray-300">📸 {content.photos} Photos</p>
-                  )}
-                  {content.videos && (
-                    <p className="text-gray-300">🎥 {content.videos} Videos</p>
-                  )}
-                  {content.exclusive && (
-                    <p className="text-purple-400">⭐ Exclusive Content</p>
-                  )}
-                </div>
+            <div className="bg-gray-900 bg-opacity-50 rounded-xl p-4 border border-gray-800">
+              <h3 className="font-semibold mb-3 flex items-center">
+                <Package className="w-4 h-4 mr-2" />
+                What's included:
+              </h3>
+              <div className="space-y-2">
+                {bundle.photos && (
+                  <p className="text-gray-300">📸 {bundle.photos} Photos</p>
+                )}
+                {bundle.videos && (
+                  <p className="text-gray-300">🎥 {bundle.videos} Videos</p>
+                )}
+                {bundle.exclusive && (
+                  <p className="text-purple-400">⭐ Exclusive Content</p>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Delivery Info */}
