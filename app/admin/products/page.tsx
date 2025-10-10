@@ -1,7 +1,8 @@
 // @ts-nocheck
 "use client";
+
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Edit, Trash2, Save, X } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Save, X, Image as ImageIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/app/http";
 
@@ -16,6 +17,7 @@ export default function AdminProductsPage() {
     image: "",
     description: "",
   });
+  const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -23,9 +25,9 @@ export default function AdminProductsPage() {
 
   const fetchData = async () => {
     try {
-      const productsRes = await apiFetch("/api/products");
-      const productsData = await productsRes.json();
-      setProducts(productsData);
+      const res = await apiFetch("/api/products");
+      const data = await res.json();
+      setProducts(data);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -37,10 +39,11 @@ export default function AdminProductsPage() {
     setEditing(product.id);
     setFormData({
       name: product.name,
-      price: product.price.toString(),
+      price: product.price?.toString() || "",
       image: product.image || "",
       description: product.description || "",
     });
+    setFile(null);
   };
 
   const handleCancel = () => {
@@ -51,25 +54,29 @@ export default function AdminProductsPage() {
       image: "",
       description: "",
     });
+    setFile(null);
   };
 
   const handleSave = async () => {
     try {
-      const url = editing === "new"
-        ? "/api/admin/products"
-        : `/api/admin/products/${editing}`;
-
+      const url =
+        editing === "new"
+          ? "/api/admin/products"
+          : `/api/admin/products/${editing}`;
       const method = editing === "new" ? "POST" : "PUT";
 
-      const productData = {
-        ...formData,
-        price: formData.price ? parseFloat(formData.price) : 0,
-      };
+      // Создаём FormData
+      const fd = new FormData();
+      fd.append("name", formData.name);
+      fd.append("price", formData.price || "0");
+      fd.append("description", formData.description || "");
+      if (file) {
+        fd.append("image", file);
+      }
 
       const response = await apiFetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(productData),
+        body: fd,
       });
 
       if (response.ok) {
@@ -108,6 +115,13 @@ export default function AdminProductsPage() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+    }
   };
 
   return (
@@ -162,17 +176,33 @@ export default function AdminProductsPage() {
                   placeholder="0.00"
                 />
               </div>
+
+              {/* File Upload */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Image URL</label>
-                <input
-                  type="text"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                  placeholder="https://..."
-                />
+                <label className="block text-sm font-medium mb-2">
+                  Product Image
+                </label>
+                <div className="flex items-center space-x-3">
+                  <label className="flex items-center bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 cursor-pointer hover:border-purple-500 transition-colors">
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    <span>{file ? file.name : "Choose file"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                  {formData.image && !file && (
+                    <img
+                      src={formData.image}
+                      alt="Preview"
+                      className="w-14 h-14 object-cover rounded-lg border border-gray-700"
+                    />
+                  )}
+                </div>
               </div>
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">Description</label>
                 <textarea
@@ -185,6 +215,7 @@ export default function AdminProductsPage() {
                 />
               </div>
             </div>
+
             <div className="flex space-x-3 mt-4">
               <button
                 onClick={handleSave}
@@ -204,7 +235,7 @@ export default function AdminProductsPage() {
           </div>
         )}
 
-        {/* Items List */}
+        {/* Products Grid */}
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (

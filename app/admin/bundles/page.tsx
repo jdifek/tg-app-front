@@ -14,8 +14,9 @@ export default function AdminBundlesPage() {
     name: "",
     description: "",
     price: "",
-    image: "",
     content: "",
+    imageFile: null, // для файла
+    image: "", // для отображения текущей картинки
   });
 
   useEffect(() => {
@@ -40,8 +41,9 @@ export default function AdminBundlesPage() {
       name: bundle.name,
       description: bundle.description || "",
       price: bundle.price.toString(),
-      image: bundle.image || "",
       content: bundle.content || "",
+      image: bundle.image || "",
+      imageFile: null,
     });
   };
 
@@ -51,29 +53,36 @@ export default function AdminBundlesPage() {
       name: "",
       description: "",
       price: "",
-      image: "",
       content: "",
+      image: "",
+      imageFile: null,
     });
   };
 
   const handleSave = async () => {
     try {
-      const url = editing
-        ? `/api/admin/bundles/${editing}`
-        : "/api/admin/bundles";
+      const isNew = editing === "new"; // true, если добавляем новый
+      const url = isNew
+        ? "/api/admin/bundles"
+        : `/api/admin/bundles/${editing}`;
+      const method = isNew ? "POST" : "PUT";
 
-      const method = editing ? "PUT" : "POST";
+      const fd = new FormData();
+      fd.append("name", formData.name);
+      fd.append("description", formData.description);
+      fd.append("price", formData.price);
+      if (formData.content) {
+        try {
+          const parsed = JSON.parse(formData.content); // проверяем, что JSON валиден
+          fd.append("content", JSON.stringify(parsed));
+        } catch (e) {
+          alert("Content field contains invalid JSON");
+          return;
+        }
+      }
+      if (formData.imageFile) fd.append("image", formData.imageFile);
 
-      const response = await apiFetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-        }),
-      });
+      const response = await apiFetch(url, { method, body: fd });
 
       if (response.ok) {
         await fetchBundles();
@@ -107,10 +116,14 @@ export default function AdminBundlesPage() {
   };
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData({ ...formData, imageFile: e.target.files[0] });
+    }
   };
 
   return (
@@ -169,19 +182,6 @@ export default function AdminBundlesPage() {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">
-                  Image URL
-                </label>
-                <input
-                  type="text"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">
                   Description
                 </label>
                 <textarea
@@ -203,10 +203,34 @@ export default function AdminBundlesPage() {
                   onChange={handleInputChange}
                   rows="3"
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500 font-mono text-sm"
-                  placeholder='{"photos": 50, "videos": 10, "exclusive": true}'
+                  placeholder='{"photos":50,"videos":10,"exclusive":true}'
                 />
               </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full text-gray-300"
+                />
+                {formData.image && !formData.imageFile && (
+                  <img
+                    src={formData.image}
+                    alt="bundle"
+                    className="mt-2 w-32 h-32 object-cover rounded-lg"
+                  />
+                )}
+                {formData.imageFile && (
+                  <img
+                    src={URL.createObjectURL(formData.imageFile)}
+                    alt="preview"
+                    className="mt-2 w-32 h-32 object-cover rounded-lg"
+                  />
+                )}
+              </div>
             </div>
+
             <div className="flex space-x-3 mt-4">
               <button
                 onClick={handleSave}
