@@ -67,7 +67,7 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
             onClick={() => router.back()}
             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 text-white" color="white" />
           </button>
           <h1 className="text-lg font-semibold truncate">{bundle.name}</h1>
           <div className="w-10" />
@@ -96,7 +96,7 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
             {/* Content Details */}
             <div className="bg-gray-900 bg-opacity-50 rounded-xl p-4 border border-gray-800">
               <h3 className="font-semibold mb-3 flex items-center">
-                <Package className="w-4 h-4 mr-2" />
+                <Package className="w-4 h-4 mr-2 text-white" color="white" />
                 What's included:
               </h3>
               <div className="space-y-2">

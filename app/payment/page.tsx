@@ -1,26 +1,34 @@
-'use client'
+"use client";
 
-import { Suspense, useState, useEffect } from 'react'
-import { ArrowLeft, CreditCard, Smartphone, DollarSign, Star } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useState, useEffect } from "react";
+import {
+  ArrowLeft,
+  CreditCard,
+  Smartphone,
+  DollarSign,
+  Star,
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // ✅ Оборачиваем компонент в Suspense
 export default function PaymentPageWrapper() {
   return (
-    <Suspense fallback={<div className="text-center text-white p-10">Loading...</div>}>
+    <Suspense
+      fallback={<div className="text-center text-white p-10">Loading...</div>}
+    >
       <PaymentPage />
     </Suspense>
-  )
+  );
 }
 
 function PaymentPage() {
-  const [order, setOrder] = useState<any | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [selectedMethod, setSelectedMethod] = useState('')
-  
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const orderId = searchParams.get('orderId')
+  const [order, setOrder] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedMethod, setSelectedMethod] = useState("");
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId");
 
   useEffect(() => {
     if (orderId) {
@@ -28,52 +36,52 @@ function PaymentPage() {
       setOrder({
         id: orderId,
         total: 29.99,
-        items: [{ name: 'Premium Photo Set', price: 29.99 }]
-      })
-      setLoading(false)
+        items: [{ name: "Premium Photo Set", price: 29.99 }],
+      });
+      setLoading(false);
     }
-  }, [orderId])
+  }, [orderId]);
 
   const paymentMethods = [
     {
-      id: 'card',
-      name: 'Card/Crypto',
-      description: 'Pay with card or cryptocurrency via Tribute',
+      id: "card",
+      name: "Card/Crypto",
+      description: "Pay with card or cryptocurrency via Tribute",
       icon: CreditCard,
-      color: 'from-blue-500 to-purple-600'
+      color: "from-blue-500 to-purple-600",
     },
     {
-      id: 'usdt',
-      name: 'USDT (TRC20)',
-      description: 'Pay with USDT on TRON network',
+      id: "usdt",
+      name: "USDT (TRC20)",
+      description: "Pay with USDT on TRON network",
       icon: DollarSign,
-      color: 'from-green-500 to-blue-600'
+      color: "from-green-500 to-blue-600",
     },
     {
-      id: 'paypal',
-      name: 'PayPal',
-      description: 'Pay securely with PayPal',
+      id: "paypal",
+      name: "PayPal",
+      description: "Pay securely with PayPal",
       icon: Smartphone,
-      color: 'from-blue-600 to-indigo-600'
+      color: "from-blue-600 to-indigo-600",
     },
     {
-      id: 'stars',
-      name: 'Telegram Stars',
-      description: 'Pay with Telegram Stars',
+      id: "stars",
+      name: "Telegram Stars",
+      description: "Pay with Telegram Stars",
       icon: Star,
-      color: 'from-yellow-500 to-orange-600'
-    }
-  ]
+      color: "from-yellow-500 to-orange-600",
+    },
+  ];
 
   const handlePayment = (methodId: string) => {
-    setSelectedMethod(methodId)
-    console.log(`Processing payment with ${methodId}`)
-    
+    setSelectedMethod(methodId);
+    console.log(`Processing payment with ${methodId}`);
+
     // имитация успешной оплаты
     setTimeout(() => {
-      router.push(`/success?orderId=${orderId}&method=${methodId}`)
-    }, 2000)
-  }
+      router.push(`/success?orderId=${orderId}&method=${methodId}`);
+    }, 2000);
+  };
 
   if (loading) {
     return (
@@ -87,7 +95,7 @@ function PaymentPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -99,7 +107,7 @@ function PaymentPage() {
             onClick={() => router.back()}
             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 text-white" color="white" />
           </button>
           <h1 className="text-xl font-bold text-white">Payment</h1>
           <div className="w-10" />
@@ -129,9 +137,11 @@ function PaymentPage() {
 
           {/* Payment Methods */}
           <div className="space-y-3">
-            <h3 className="font-semibold mb-4 text-white">Choose Payment Method</h3>
+            <h3 className="font-semibold mb-4 text-white">
+              Choose Payment Method
+            </h3>
             {paymentMethods.map((method) => {
-              const Icon = method.icon
+              const Icon = method.icon;
               return (
                 <button
                   key={method.id}
@@ -144,8 +154,12 @@ function PaymentPage() {
                       <Icon className="w-6 h-6 text-white" />
                     </div>
                     <div className="text-left">
-                      <h4 className="font-semibold text-white">{method.name}</h4>
-                      <p className="text-white text-opacity-80 text-sm">{method.description}</p>
+                      <h4 className="font-semibold text-white">
+                        {method.name}
+                      </h4>
+                      <p className="text-white text-opacity-80 text-sm">
+                        {method.description}
+                      </p>
                     </div>
                   </div>
                   {selectedMethod === method.id && (
@@ -155,11 +169,11 @@ function PaymentPage() {
                     </div>
                   )}
                 </button>
-              )
+              );
             })}
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

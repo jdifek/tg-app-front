@@ -1,28 +1,40 @@
-'use client'
-import { ArrowLeft, Crown, Check } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+"use client";
+import { ArrowLeft, Crown, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function VIPPage() {
-  const router = useRouter()
+  const router = useRouter();
 
   const features = [
-    'Exclusive daily content',
-    'Behind the scenes photos and videos',
-    'Priority DM responses',
-    'Early access to new releases',
-    'Special discounts on bundles',
-    'Monthly exclusive livestreams'
-  ]
+    "Exclusive daily content",
+    "Behind the scenes photos and videos",
+    "Priority DM responses",
+    "Early access to new releases",
+    "Special discounts on bundles",
+    "Monthly exclusive livestreams",
+  ];
 
   const plans = [
-    { id: 'monthly', name: 'Monthly VIP', price: 49.99, period: '/month' },
-    { id: 'quarterly', name: '3 Months VIP', price: 129.99, period: '/3 months', discount: 'Save 13%' },
-    { id: 'yearly', name: 'Yearly VIP', price: 449.99, period: '/year', discount: 'Save 25%' }
-  ]
+    { id: "monthly", name: "Monthly VIP", price: 49.99, period: "/month" },
+    {
+      id: "quarterly",
+      name: "3 Months VIP",
+      price: 129.99,
+      period: "/3 months",
+      discount: "Save 13%",
+    },
+    {
+      id: "yearly",
+      name: "Yearly VIP",
+      price: 449.99,
+      period: "/year",
+      discount: "Save 25%",
+    },
+  ];
 
   const handleSubscribe = (planId: any) => {
-    router.push(`/checkout?type=vip&id=${planId}`)
-  }
+    router.push(`/checkout?type=vip&id=${planId}`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
@@ -33,7 +45,7 @@ export default function VIPPage() {
             onClick={() => router.back()}
             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 text-white" color="white" />
           </button>
           <h1 className="text-xl font-bold">Private VIP Channel</h1>
           <div className="w-10" />
@@ -43,8 +55,12 @@ export default function VIPPage() {
           {/* Hero Section */}
           <div className="bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl p-6 mb-6 text-center">
             <Crown className="w-12 h-12 text-white mx-auto mb-3" />
-            <h2 className="text-2xl font-bold text-white mb-2">Become a VIP Member</h2>
-            <p className="text-white text-opacity-90">Get exclusive access to premium content</p>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Become a VIP Member
+            </h2>
+            <p className="text-white text-opacity-90">
+              Get exclusive access to premium content
+            </p>
           </div>
 
           {/* Features */}
@@ -72,11 +88,15 @@ export default function VIPPage() {
                   <div>
                     <h4 className="font-semibold text-lg">{plan.name}</h4>
                     {plan.discount && (
-                      <span className="text-sm text-green-400">{plan.discount}</span>
+                      <span className="text-sm text-green-400">
+                        {plan.discount}
+                      </span>
                     )}
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-purple-400">${plan.price}</div>
+                    <div className="text-2xl font-bold text-purple-400">
+                      ${plan.price}
+                    </div>
                     <div className="text-sm text-gray-400">{plan.period}</div>
                   </div>
                 </div>
@@ -92,5 +112,5 @@ export default function VIPPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

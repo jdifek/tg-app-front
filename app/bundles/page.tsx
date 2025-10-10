@@ -35,7 +35,7 @@ export default function BundlesPage() {
             onClick={() => router.back()}
             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 text-white" color="white" />
           </button>
           <h1 className="text-xl font-bold">Bundles</h1>
           <div className="w-10" />

@@ -1,23 +1,23 @@
-'use client'
-import { useState } from 'react'
-import { ArrowLeft, Video, Clock } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+"use client";
+import { useState } from "react";
+import { ArrowLeft, Video, Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function CustomVideoPage() {
-  const router = useRouter()
-  const [selectedDuration, setSelectedDuration] = useState<any | null>(null)
+  const router = useRouter();
+  const [selectedDuration, setSelectedDuration] = useState<any | null>(null);
 
   const durations = [
-    { id: '5min', duration: '5 minutes', price: 99.99 },
-    { id: '10min', duration: '10 minutes', price: 179.99 },
-    { id: '15min', duration: '15 minutes', price: 249.99 }
-  ]
+    { id: "5min", duration: "5 minutes", price: 99.99 },
+    { id: "10min", duration: "10 minutes", price: 179.99 },
+    { id: "15min", duration: "15 minutes", price: 249.99 },
+  ];
 
   const handleOrder = () => {
     if (selectedDuration) {
-      router.push(`/checkout?type=custom-video&id=${selectedDuration}`)
+      router.push(`/checkout?type=custom-video&id=${selectedDuration}`);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
@@ -28,7 +28,7 @@ export default function CustomVideoPage() {
             onClick={() => router.back()}
             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 text-white" color="white" />
           </button>
           <h1 className="text-xl font-bold">Custom Video</h1>
           <div className="w-10" />
@@ -38,8 +38,12 @@ export default function CustomVideoPage() {
           {/* Hero Section */}
           <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-xl p-6 mb-6 text-center">
             <Video className="w-12 h-12 text-white mx-auto mb-3" />
-            <h2 className="text-2xl font-bold text-white mb-2">Custom Video Request</h2>
-            <p className="text-white text-opacity-90">Get a personalized video made just for you</p>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Custom Video Request
+            </h2>
+            <p className="text-white text-opacity-90">
+              Get a personalized video made just for you
+            </p>
           </div>
 
           {/* Description */}
@@ -65,8 +69,8 @@ export default function CustomVideoPage() {
                 onClick={() => setSelectedDuration(option.id)}
                 className={`w-full rounded-xl p-4 border-2 transition-all ${
                   selectedDuration === option.id
-                    ? 'border-purple-500 bg-purple-500 bg-opacity-20'
-                    : 'border-gray-800 bg-gray-900 bg-opacity-50 hover:border-gray-700'
+                    ? "border-purple-500 bg-purple-500 bg-opacity-20"
+                    : "border-gray-800 bg-gray-900 bg-opacity-50 hover:border-gray-700"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -74,7 +78,9 @@ export default function CustomVideoPage() {
                     <h4 className="font-semibold text-lg">{option.duration}</h4>
                     <p className="text-sm text-gray-400">Custom video</p>
                   </div>
-                  <div className="text-2xl font-bold text-purple-400">${option.price}</div>
+                  <div className="text-2xl font-bold text-purple-400">
+                    ${option.price}
+                  </div>
                 </div>
               </button>
             ))}
@@ -92,5 +98,5 @@ export default function CustomVideoPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
