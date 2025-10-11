@@ -31,7 +31,8 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
   };
 
   const handleBuy = () => {
-    router.push(`/checkout?type=bundle&id=${params.id}`);
+   console.log('wqwq');
+   
   };
 
   if (loading) {

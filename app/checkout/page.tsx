@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { ArrowLeft, CreditCard } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "../http";
 
 export default function CheckoutPage() {
   const [item, setItem] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -16,21 +17,18 @@ export default function CheckoutPage() {
     zipCode: "",
     country: "",
   });
-  const [submitting, setSubmitting] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Получаем параметры из URL
+  const type = searchParams.get("type");
+  const id = searchParams.get("id");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const type = params.get("type");
-    const id = params.get("id");
-
-    if (type && id) {
-      fetchItem(type, id);
-    } else {
-      setLoading(false);
-    }
-  }, []);
+    if (type && id) fetchItem(type, id);
+    else setLoading(false);
+  }, [type, id]);
 
   const fetchItem = async (type: string, id: string) => {
     try {
@@ -47,23 +45,22 @@ export default function CheckoutPage() {
   };
 
   const handleInputChange = (e: any) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    if (!type || !id) return alert("Invalid order parameters");
+
     setSubmitting(true);
 
     try {
-      const params = new URLSearchParams(window.location.search);
-      const type = params.get("type");
-      const id = params.get("id");
-
       const orderData = {
         userId: "123456789", // TODO: заменить на реального пользователя из Telegram WebApp
+        orderType: type === "product" ? "PRODUCT" : "BUNDLE",
         items: [{ id, type, quantity: 1 }],
         ...formData,
       };
@@ -74,12 +71,13 @@ export default function CheckoutPage() {
         body: JSON.stringify(orderData),
       });
 
-      if (response.ok) {
-        const order = await response.json();
-        router.push(`/payment?orderId=${order.id}`);
-      } else {
-        throw new Error("Failed to create order");
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to create order");
       }
+
+      const order = await response.json();
+      router.push(`/payment?orderId=${order.id}`);
     } catch (error) {
       console.error("Error creating order:", error);
       alert("Failed to create order. Please try again.");
@@ -112,9 +110,9 @@ export default function CheckoutPage() {
             onClick={() => router.back()}
             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-6 h-6 text-white" color="white" />
+            <ArrowLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-xl font-bold">Checkout</h1>
+          <h1 className="text-xl font-bold text-white">Checkout</h1>
           <div className="w-10" />
         </div>
 
@@ -122,95 +120,40 @@ export default function CheckoutPage() {
           {/* Order Summary */}
           {item && (
             <div className="bg-gray-900 bg-opacity-50 rounded-xl p-4 border border-gray-800 mb-6">
-              <h3 className="font-semibold mb-3">Order Summary</h3>
+              <h3 className="font-semibold mb-3 text-white">Order Summary</h3>
               <div className="flex justify-between items-center">
-                <span>{item.name}</span>
-                <span className="font-bold text-purple-400">${item.price}</span>
+                <span className="text-gray-300">{item.name}</span>
+                <span className="font-bold text-purple-400">
+                  ${item.price}
+                </span>
               </div>
             </div>
           )}
 
           {/* Shipping Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                First Name
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Last Name
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Address</label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition-colors"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">City</label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  ZIP Code
+            {[
+              { name: "firstName", label: "First Name" },
+              { name: "lastName", label: "Last Name" },
+              { name: "address", label: "Address" },
+              { name: "city", label: "City" },
+              { name: "zipCode", label: "ZIP Code" },
+              { name: "country", label: "Country" },
+            ].map((field) => (
+              <div key={field.name}>
+                <label className="block text-sm font-medium mb-2 text-white">
+                  {field.label}
                 </label>
                 <input
                   type="text"
-                  name="zipCode"
-                  value={formData.zipCode}
+                  name={field.name}
+                  value={(formData as any)[field.name]}
                   onChange={handleInputChange}
                   required
-                  className="w-full bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition-colors"
+                  className="w-full bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition-colors text-white"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Country</label>
-              <input
-                type="text"
-                name="country"
-                value={formData.country}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition-colors"
-              />
-            </div>
+            ))}
 
             {/* Submit Button */}
             <button
