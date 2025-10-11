@@ -28,3 +28,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ✅ Обновляем все формы и элементы */
+input,
+textarea,
+select,
+button,
+label,
+option,
+optgroup,
+fieldset {
+  color: #ffffff ;       /* текст */
+}
+
+/* placeholder */
+::placeholder {
+  color: #ffffff ;
+  opacity: 1;
+}
