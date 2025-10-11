@@ -30,10 +30,39 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
     }
   };
 
-  const handleBuy = () => {
-   console.log('wqwq');
-   
+  const handleBuy = async () => {
+    try {
+      const orderData = {
+        userId: "123456789", // 👈 пока мок, потом заменишь на реального пользователя
+        orderType: "BUNDLE",
+        items: [{ id: params.id, type: "bundle", quantity: 1 }],
+        firstName: "John",
+        lastName: "Doe",
+        address: "Mock Street 1",
+        city: "Tallinn",
+        zipCode: "12345",
+        country: "Estonia",
+      };
+  
+      const response = await apiFetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
+  
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to create order");
+      }
+  
+      const order = await response.json();
+      router.push(`/payment?orderId=${order.id}`);
+    } catch (error) {
+      console.error("Error creating order:", error);
+      alert("Failed to create order. Please try again.");
+    }
   };
+  
 
   if (loading) {
     return (
