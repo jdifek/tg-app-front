@@ -5,7 +5,10 @@ import { ArrowLeft, CreditCard } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "../http";
 
-export default function CheckoutPage() {
+import { Suspense } from "react";
+
+
+export function CheckoutPage() {
   const [item, setItem] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -170,5 +173,12 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading checkout...</div>}>
+      <CheckoutPage />
+    </Suspense>
   );
 }
