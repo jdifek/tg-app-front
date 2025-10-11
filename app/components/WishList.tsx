@@ -5,24 +5,24 @@ import Image from "next/image";
 import { apiFetch } from "../http";
 
 export default function WishList() {
-  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [wishlistItems, setWishlistItems] = useState<any[]>([]);
+  // const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchWishlist();
-  }, []);
+  // useEffect(() => {
+  //   fetchWishlist();
+  // }, []);
 
-  const fetchWishlist = async () => {
-    try {
-      const response = await apiFetch("/api/wishlist");
-      const data = await response.json();
-      setWishlistItems(data);
-    } catch (error) {
-      console.error("Error fetching wishlist:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchWishlist = async () => {
+  //   try {
+  //     const response = await apiFetch("/api/wishlist");
+  //     const data = await response.json();
+  //     setWishlistItems(data);
+  //   } catch (error) {
+  //     console.error("Error fetching wishlist:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   if (loading) {
     return (

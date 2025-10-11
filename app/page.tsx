@@ -8,7 +8,7 @@ export default function Home() {
       <div className="max-w-md mx-auto relative">
         <Header />
         <Navigation />
-        <WishList />
+        {/* <WishList /> */}
       </div>
     </div>
   )
