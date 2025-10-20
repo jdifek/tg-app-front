@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "../http";
 
 import { Suspense } from "react";
+import { useUser } from "../context/UserContext";
 
 
 export function CheckoutPage() {
@@ -54,41 +55,14 @@ export function CheckoutPage() {
     }));
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
     if (!type || !id) return alert("Invalid order parameters");
-
-    setSubmitting(true);
-
-    try {
-      const orderData = {
-        userId: "123456789", // TODO: заменить на реального пользователя из Telegram WebApp
-        orderType: type === "product" ? "PRODUCT" : "BUNDLE",
-        items: [{ id, type, quantity: 1 }],
-        ...formData,
-      };
-
-      const response = await apiFetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Failed to create order");
-      }
-
-      const order = await response.json();
-      router.push(`/payment?orderId=${order.id}`);
-    } catch (error) {
-      console.error("Error creating order:", error);
-      alert("Failed to create order. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+  
+    // Переносим создание ордера в PaymentPage
+    router.push(
+      `/payment?type=${type}&id=${id}&price=${item?.price}&shipping=${encodeURIComponent(JSON.stringify(formData))}`
+    );  };
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">

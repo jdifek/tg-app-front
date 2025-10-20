@@ -9,7 +9,15 @@ import {
   Star,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-
+import { apiFetch } from "../http";
+import { useUser } from "../context/UserContext";
+export enum PaymentMethod {
+  CARD_CRYPTO = "card",   // Tribute (Card/Crypto)
+  USDT_TRC20  = "usdt",    // Оплата в USDT (TRC20)
+  PAYPAL      = "paypal",        // PayPal
+  STARS       = "stars",         // Telegram Stars
+  MANUAL      = "MANUAL",        // Ручная оплата
+}
 // ✅ Оборачиваем компонент в Suspense
 export default function PaymentPageWrapper() {
   return (
@@ -24,64 +32,99 @@ export default function PaymentPageWrapper() {
 function PaymentPage() {
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useUser()
+
   const [selectedMethod, setSelectedMethod] = useState("");
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const orderId = searchParams.get("orderId");
+const searchParams = useSearchParams();
+const type = searchParams.get("type"); // "product" или "bundle"
+const id = searchParams.get("id");     // id товара или бандла
+const priceParam = searchParams.get("price");
+const totalPrice = priceParam ? parseFloat(priceParam) : 0;
+const shippingParam = searchParams.get("shipping");
+const shippingData = shippingParam ? JSON.parse(shippingParam) : {};
 
   useEffect(() => {
-    if (orderId) {
-      // имитация запроса на получение данных заказа
+    if (id) {
       setOrder({
-        id: orderId,
-        total: 29.99,
-        items: [{ name: "Premium Photo Set", price: 29.99 }],
+        id: id,
+        total: totalPrice,
+        items: [{ name: "Premium Photo Set", price: totalPrice }],
       });
       setLoading(false);
     }
-  }, [orderId]);
+  }, [id, totalPrice]);
 
   const paymentMethods = [
     {
-      id: "card",
+      id: PaymentMethod.CARD_CRYPTO,
       name: "Card/Crypto",
       description: "Pay with card or cryptocurrency via Tribute",
       icon: CreditCard,
       color: "from-blue-500 to-purple-600",
     },
     {
-      id: "usdt",
+      id: PaymentMethod.USDT_TRC20,
       name: "USDT (TRC20)",
       description: "Pay with USDT on TRON network",
       icon: DollarSign,
       color: "from-green-500 to-blue-600",
     },
     {
-      id: "paypal",
+      id: PaymentMethod.PAYPAL,
       name: "PayPal",
       description: "Pay securely with PayPal",
       icon: Smartphone,
       color: "from-blue-600 to-indigo-600",
     },
     {
-      id: "stars",
+      id: PaymentMethod.STARS,
       name: "Telegram Stars",
       description: "Pay with Telegram Stars",
       icon: Star,
       color: "from-yellow-500 to-orange-600",
     },
   ];
+  
 
-  const handlePayment = (methodId: string) => {
+  const handlePayment = async (methodId: PaymentMethod) => {
+    if (!id || !type) return alert("Invalid order parameters");
+  
     setSelectedMethod(methodId);
-    console.log(`Processing payment with ${methodId}`);
-
-    // имитация успешной оплаты
-    setTimeout(() => {
-      router.push(`/success?orderId=${orderId}&method=${methodId}`);
-    }, 2000);
+  
+    try {
+      const orderData = {
+        userId: user.id,
+        orderType: type === "product" ? "PRODUCT" : "BUNDLE",
+        items: [{ id, type, quantity: 1, price: totalPrice }],
+        paymentMethod: methodId,
+        shipping: shippingData,
+      };
+  
+      const response = await apiFetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
+  
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to create payment");
+      }
+  
+      const paymentResult = await response.json();
+  
+      router.push(
+        `/payment/${methodId}?orderId=${paymentResult.id}&price=${totalPrice}`
+      );
+    } catch (error) {
+      console.error("Payment creation failed:", error);
+      alert("Failed to create payment. Please try again.");
+    }
   };
+  
+  
 
   if (loading) {
     return (
@@ -144,9 +187,9 @@ function PaymentPage() {
               const Icon = method.icon;
               return (
                 <button
-                  key={method.id}
-                  onClick={() => handlePayment(method.id)}
-                  disabled={selectedMethod === method.id}
+                key={method.id}
+                onClick={() => handlePayment(method.id)}
+                disabled={selectedMethod === method.id}
                   className={`w-full bg-gradient-to-r ${method.color} rounded-xl p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed`}
                 >
                   <div className="flex items-center space-x-4">

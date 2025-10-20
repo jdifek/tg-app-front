@@ -1,9 +1,12 @@
 "use client";
 import { ArrowLeft, Crown, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useUser } from "../context/UserContext";
+import { apiFetch } from "../http";
 
 export default function VIPPage() {
   const router = useRouter();
+  const { user } = useUser();
 
   const features = [
     "Exclusive daily content",
@@ -32,8 +35,25 @@ export default function VIPPage() {
     },
   ];
 
-  const handleSubscribe = (planId: any) => {
-    router.push(`/checkout?type=vip&id=${planId}`);
+  const handleSubscribe = async (planId: any, price: any) => {
+    const orderData = {
+      userId: user.id, // 👈 пока мок, потом заменишь на реального пользователя
+      orderType: "VIP",
+      items: [{ type: "VIP", quantity: 1, price: price }],
+    };
+
+    const response = await apiFetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || "Failed to create order");
+    }
+    const order = await response.json();
+    router.push(`/payment?orderId=${order.id}`);
   };
 
   return (
@@ -101,7 +121,7 @@ export default function VIPPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleSubscribe(plan.id)}
+                  onClick={() => handleSubscribe(plan.id, plan.price)}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-lg transition-all"
                 >
                   Subscribe Now
