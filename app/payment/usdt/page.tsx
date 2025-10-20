@@ -3,9 +3,8 @@
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Upload } from "lucide-react";
-import { useState } from "react";
 import { apiFetch } from "@/app/http";
-
+export const dynamic = "force-dynamic"; 
 export default function PayPalPage() {
   const router = useRouter();
   const handleConfirmPayment = async () => {

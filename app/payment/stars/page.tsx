@@ -5,7 +5,7 @@ import { ArrowLeft, Star } from "lucide-react";
 import { apiFetch } from "@/app/http";
 import { toast } from "react-hot-toast";
 import { useState, useEffect } from "react";
-
+export const dynamic = "force-dynamic"; 
 export default function StarsPayPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
