@@ -4,7 +4,6 @@ import { ArrowLeft, Package, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { apiFetch } from "@/app/http";
-import { useUser } from "@/app/context/UserContext";
 
 interface BundlePageParams {
   id: string;
@@ -14,7 +13,6 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
   const [bundle, setBundle] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { user } = useUser()
 
 
   useEffect(() => {

@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "../http";
 
 import { Suspense } from "react";
-import { useUser } from "../context/UserContext";
 
 
 export function CheckoutPage() {

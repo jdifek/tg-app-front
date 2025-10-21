@@ -76,6 +76,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const hash = window.location.hash;
     const params = new URLSearchParams(hash.replace("#", ""));
     const tgWebAppData = params.get("tgWebAppData");
+    console.log(params, 'params');
+    console.log(tgWebAppData, 'tgWebAppData');
+    
     if (tgWebAppData) {
       const decodedData = decodeURIComponent(tgWebAppData);
       const dataParams = new URLSearchParams(decodedData);
