@@ -4,9 +4,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Star } from "lucide-react";
 import { apiFetch } from "@/app/http";
 import { toast } from "react-hot-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+
 export const dynamic = "force-dynamic"; 
-export default function StarsPayPage() {
+
+function StarsPayPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [starsPrice, setStarsPrice] = useState<number>(0);
@@ -47,7 +49,7 @@ export default function StarsPayPage() {
           if (status === "paid") {
             toast.success("Оплата прошла успешно ⭐");
   
-            const orderId = new URLSearchParams(window.location.search).get("orderId");
+            const orderId = searchParams.get("orderId");
             if (!orderId) return;
   
             const confirmRes = await apiFetch(`/api/orders/${orderId}/payment-status`, {
@@ -72,8 +74,6 @@ export default function StarsPayPage() {
       toast.error("Ошибка при создании счёта");
     }
   };
-  
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-indigo-900 to-black text-white">
@@ -133,5 +133,17 @@ export default function StarsPayPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function StarsPayPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-black via-indigo-900 to-black flex items-center justify-center">
+        <div className="text-white text-xl">Загрузка...</div>
+      </div>
+    }>
+      <StarsPayPageContent />
+    </Suspense>
   );
 }

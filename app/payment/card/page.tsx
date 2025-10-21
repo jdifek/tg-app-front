@@ -1,11 +1,14 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/app/http";
 import { toast } from "react-hot-toast";
+import { Suspense } from "react";
+
 export const dynamic = "force-dynamic"; 
-export default function PayPalPage() {
+
+function PayPalPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const price = searchParams.get("price")
@@ -13,7 +16,8 @@ export default function PayPalPage() {
     : 0;
 
   const handleConfirmPayment = async () => {
-    const orderId = new URLSearchParams(window.location.search).get("orderId");
+    const orderId = searchParams.get("orderId");
+    
     if (!orderId) {
       toast.error("Order ID не найден");
       return;
@@ -35,6 +39,7 @@ export default function PayPalPage() {
       toast.error("Ошибка при обновлении статуса платежа");
     }
   };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black text-white">
       {/* Header */}
@@ -78,5 +83,17 @@ export default function PayPalPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function PayPalPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center">
+        <div className="text-white text-xl">Загрузка...</div>
+      </div>
+    }>
+      <PayPalPageContent />
+    </Suspense>
   );
 }
