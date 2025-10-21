@@ -89,7 +89,7 @@ export default {
     return [];
   },
   registerUser: (telegramId: string, firstName: string): Promise<User> =>
-    api.post("/users", { telegramId, firstName }),
+    api.post("/api/users", { telegramId, firstName }),
 
   getUser: (telegramId: string): Promise<User> =>
     api.get(`/user/${telegramId}`),
