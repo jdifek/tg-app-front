@@ -33,7 +33,7 @@ function StarsPayPageContent() {
         body: JSON.stringify({
           title: "Оплата заказа",
           description: `Покупка за ${starsPrice} Stars`,
-          amount: starsPrice * 100,
+          amount: starsPrice ,
         }),
       });
   
