@@ -33,7 +33,7 @@ function StarsPayPageContent() {
         body: JSON.stringify({
           title: "Оплата заказа",
           description: `Покупка за ${starsPrice} Stars`,
-          amount: starsPrice ,
+          amount: starsPrice,
         }),
       });
   
@@ -45,7 +45,14 @@ function StarsPayPageContent() {
   
       // Проверка существования Telegram WebApp
       if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
-        window.Telegram.WebApp.openInvoice?.(data.invoice_url, async (status: string) => {
+        // Извлекаем slug (invoice_id) из ссылки
+        const invoiceId = data.invoice_url.split("/").pop();
+        if (!invoiceId) {
+          toast.error("Некорректная ссылка на счёт");
+          return;
+        }
+  
+        window.Telegram.WebApp.openInvoice?.(invoiceId, async (status: string) => {
           if (status === "paid") {
             toast.success("Оплата прошла успешно ⭐");
   
@@ -74,6 +81,7 @@ function StarsPayPageContent() {
       toast.error("Ошибка при создании счёта");
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-indigo-900 to-black text-white">
