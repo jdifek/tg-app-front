@@ -27,6 +27,8 @@ function StarsPayPageContent() {
 
   const handleTelegramPay = async () => {
     try {
+      console.log("Создаём счёт на Stars...", starsPrice);
+  
       const res = await apiFetch("/api/orders/stars", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -37,47 +39,60 @@ function StarsPayPageContent() {
         }),
       });
   
+      console.log("Ответ от API:", res);
+  
       const data = await res.json();
+      console.log("Данные счёта:", data);
+  
       if (!data.invoice_url) {
         toast.error("Не удалось создать счёт");
+        console.error("invoice_url отсутствует в ответе API");
         return;
       }
   
-      // Проверка существования Telegram WebApp
-      if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
-        // Извлекаем slug (invoice_id) из ссылки
-        const invoiceId = data.invoice_url.split("/").pop();
-        if (!invoiceId) {
-          toast.error("Некорректная ссылка на счёт");
-          return;
-        }
-  
-        window.Telegram.WebApp.openInvoice?.(invoiceId, async (status: string) => {
-          if (status === "paid") {
-            toast.success("Оплата прошла успешно ⭐");
-  
-            const orderId = searchParams.get("orderId");
-            if (!orderId) return;
-  
-            const confirmRes = await apiFetch(`/api/orders/${orderId}/payment-status`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ paymentStatus: "CONFIRMED" }),
-            });
-  
-            if (!confirmRes.ok) throw new Error("Ошибка при подтверждении");
-            router.push("/");
-          } else if (status === "cancelled") {
-            toast("Платёж отменён ❌");
-          } else if (status === "failed") {
-            toast.error("Ошибка при оплате");
-          }
-        });
-      } else {
+      if (typeof window.Telegram === "undefined" || !window.Telegram.WebApp) {
         toast.error("Telegram WebApp недоступен");
+        console.error("window.Telegram.WebApp не найден");
+        return;
       }
+  
+      const invoiceId = data.invoice_url.split("/").pop();
+      console.log("Извлечён invoiceId:", invoiceId);
+  
+      if (!invoiceId) {
+        toast.error("Некорректная ссылка на счёт");
+        console.error("Не удалось извлечь invoiceId из invoice_url");
+        return;
+      }
+  
+      console.log("Открываем оплату через Telegram WebApp...");
+      window.Telegram.WebApp.openInvoice?.(invoiceId, async (status: string) => {
+        console.log("Статус оплаты:", status);
+  
+        if (status === "paid") {
+          toast.success("Оплата прошла успешно ⭐");
+  
+          const orderId = searchParams.get("orderId");
+          if (!orderId) return;
+  
+          console.log("Подтверждаем оплату на сервере для orderId:", orderId);
+          const confirmRes = await apiFetch(`/api/orders/${orderId}/payment-status`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentStatus: "CONFIRMED" }),
+          });
+  
+          console.log("Ответ на подтверждение оплаты:", confirmRes);
+          if (!confirmRes.ok) throw new Error("Ошибка при подтверждении");
+          router.push("/");
+        } else if (status === "cancelled") {
+          toast("Платёж отменён ❌");
+        } else if (status === "failed") {
+          toast.error("Ошибка при оплате");
+        }
+      });
     } catch (err) {
-      console.error(err);
+      console.error("Ошибка в handleTelegramPay:", err);
       toast.error("Ошибка при создании счёта");
     }
   };
