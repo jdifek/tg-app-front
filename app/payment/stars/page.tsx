@@ -49,8 +49,9 @@ function StarsPayPageContent() {
         console.error("invoice_url отсутствует в ответе API");
         return;
       }
-  
-      if (typeof window.Telegram === "undefined" || !window.Telegram.WebApp) {
+      const tg = window.Telegram?.WebApp;
+
+      if (!tg) {
         toast.error("Telegram WebApp недоступен");
         console.error("window.Telegram.WebApp не найден");
         return;
@@ -66,7 +67,7 @@ function StarsPayPageContent() {
       }
   
       console.log("Открываем оплату через Telegram WebApp...");
-      window.Telegram.WebApp.openInvoice?.(invoiceId, async (status: string) => {
+      tg.openInvoice?.(invoiceId, async (status: string) => {
         console.log("Статус оплаты:", status);
   
         if (status === "paid") {
