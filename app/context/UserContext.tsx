@@ -63,6 +63,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const tg = window.Telegram?.WebApp;
+    console.log(tg, 'tg');
+    
     if (tg) {
       const initData = tg.initDataUnsafe;
       if (initData?.user) {
