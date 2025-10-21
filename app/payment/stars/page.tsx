@@ -113,23 +113,12 @@ function StarsPayPageContent() {
           </p>
         </div>
 
-        {/* Pay & Confirm Buttons */}
-        <button
-          onClick={() =>
-            toast("Здесь будет вызов Telegram.paymentInvoice()", {
-              icon: "⭐",
-            })
-          }
-          className="w-full mt-5 bg-indigo-600 hover:bg-indigo-700 rounded-xl py-3 font-semibold text-white transition"
-        >
-          Оплатить в Telegram
-        </button>
-
+        {/* Pay Button */}
         <button
           onClick={handleTelegramPay}
-          className="w-full mt-3 bg-purple-600 hover:bg-purple-700 rounded-xl py-3 font-semibold text-white transition"
+          className="w-full mt-5 bg-indigo-600 hover:bg-indigo-700 rounded-xl py-3 font-semibold text-white transition"
         >
-          Подтвердить платёж
+          Оплатить Stars ⭐
         </button>
       </div>
     </div>
