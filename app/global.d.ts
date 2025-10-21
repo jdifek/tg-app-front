@@ -5,12 +5,11 @@ declare global {
   interface Window {
     Telegram?: {
       WebApp?: {
-        close: () => void;
-        initData?: string;
+        ready: () => void;
+        openInvoice: (url: string, callback: (status: string) => void) => void;
         initDataUnsafe?: any;
-        expand?: () => void;
-        ready?: () => void;
-        [key: string]: any;
+        close: () => void;
+        showPopup: (params: any) => void;
       };
     };
   }
