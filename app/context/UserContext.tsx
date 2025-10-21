@@ -79,18 +79,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     console.log(params, 'params');
     console.log(tgWebAppData, 'tgWebAppData');
     
-    if (tgWebAppData) {
-      const decodedData = decodeURIComponent(tgWebAppData);
-      const dataParams = new URLSearchParams(decodedData);
-      const userParam = dataParams.get("user");
-      const userFromUrl = userParam
-        ? JSON.parse(decodeURIComponent(userParam))
-        : null;
-      if (userFromUrl) {
-        handleLogin(userFromUrl);
-        return;
-      }
-    }
+  if (tgWebAppData) {
+  const decodedData = decodeURIComponent(tgWebAppData); // декодируем %7B...%7D
+  const dataParams = new URLSearchParams(decodedData);
+
+  const userParam = dataParams.get("user"); // получаем JSON строки
+  if (userParam) {
+    // иногда Telegram ещё экранирует слеши, поэтому дважды decode
+    const userFromUrl = JSON.parse(decodeURIComponent(userParam));
+    console.log("Пользователь из URL:", userFromUrl);
+    handleLogin(userFromUrl);
+    return;
+  }
+}
+
 
     // Фолбек: хардкод
     const hardcodedUser = {

@@ -34,26 +34,29 @@ function StarsPayPageContent() {
   
       if (!tg) {
         console.warn("Telegram WebApp не найден, ищем данные в URL...");
+  
         const hash = window.location.hash;
         const params = new URLSearchParams(hash.replace("#", ""));
         const tgWebAppData = params.get("tgWebAppData");
   
         if (tgWebAppData) {
-          const decodedData = decodeURIComponent(tgWebAppData);
+          const decodedData = decodeURIComponent(tgWebAppData); // %7B -> {
           const dataParams = new URLSearchParams(decodedData);
           const userParam = dataParams.get("user");
   
           if (userParam) {
+            // Иногда Telegram экранирует слеши, поэтому decodeURIComponent дважды
             const userFromUrl = JSON.parse(decodeURIComponent(userParam));
             if (userFromUrl) {
               console.log("Нашли пользователя в URL:", userFromUrl);
+  
               // Создаём мок-объект WebApp с openInvoice
               tg = {
                 openInvoice: (invoiceId: string, callback: (status: string) => void) => {
                   console.log("Фолбек openInvoice для invoiceId:", invoiceId);
-                  // Можно тут открыть новый таб с invoice_url для теста
+                  // Открываем invoice_url в новом окне
                   window.open(`https://t.me/${invoiceId}`, "_blank");
-                  // В фолбеке просто вызываем callback с paid для теста
+                  // Для теста сразу вызываем paid
                   setTimeout(() => callback("paid"), 1000);
                 },
               } as any;
