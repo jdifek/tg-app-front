@@ -1,6 +1,5 @@
 import Header from './components/Header'
 import Navigation from './components/Navigation'
-import WishList from './components/WishList'
 
 export default function Home() {
   return (
