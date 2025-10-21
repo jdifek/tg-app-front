@@ -29,48 +29,7 @@ function StarsPayPageContent() {
     try {
       console.log("Создаём счёт на Stars...", starsPrice);
   
-      // Получаем объект Telegram WebApp или фолбек из URL
-      let tg = window.Telegram?.WebApp;
-  
-      if (!tg) {
-        console.warn("Telegram WebApp не найден, ищем данные в URL...");
-  
-        const hash = window.location.hash;
-        const params = new URLSearchParams(hash.replace("#", ""));
-        const tgWebAppData = params.get("tgWebAppData");
-  
-        if (tgWebAppData) {
-          const decodedData = decodeURIComponent(tgWebAppData); // %7B -> {
-          const dataParams = new URLSearchParams(decodedData);
-          const userParam = dataParams.get("user");
-  
-          if (userParam) {
-            // Иногда Telegram экранирует слеши, поэтому decodeURIComponent дважды
-            const userFromUrl = JSON.parse(decodeURIComponent(userParam));
-            if (userFromUrl) {
-              console.log("Нашли пользователя в URL:", userFromUrl);
-  
-              // Создаём мок-объект WebApp с openInvoice
-              tg = {
-                openInvoice: (invoiceId: string, callback: (status: string) => void) => {
-                  console.log("Фолбек openInvoice для invoiceId:", invoiceId);
-                  // Открываем invoice_url в новом окне
-                  window.open(`https://t.me/${invoiceId}`, "_blank");
-                  // Для теста сразу вызываем paid
-                  setTimeout(() => callback("paid"), 1000);
-                },
-              } as any;
-            }
-          }
-        }
-      }
-  
-      if (!tg) {
-        toast.error("Telegram WebApp недоступен");
-        console.error("Не удалось найти Telegram WebApp и данные из URL");
-        return;
-      }
-  
+      // Создаём счёт на сервере
       const res = await apiFetch("/api/orders/stars", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,38 +49,27 @@ function StarsPayPageContent() {
         return;
       }
   
-      const invoiceId = data.invoice_url.split("/").pop();
-      if (!invoiceId) {
-        toast.error("Некорректная ссылка на счёт");
-        console.error("Не удалось извлечь invoiceId из invoice_url");
-        return;
-      }
+      // 1️⃣ Пытаемся получить Telegram WebApp
+      const tg: any = window.Telegram?.WebApp;
   
-      console.log("Открываем оплату через Telegram WebApp...");
-      tg.openInvoice?.(invoiceId, async (status: string) => {
-        console.log("Статус оплаты:", status);
-  
-        if (status === "paid") {
-          toast.success("Оплата прошла успешно ⭐");
-  
-          const orderId = searchParams.get("orderId");
-          if (!orderId) return;
-  
-          console.log("Подтверждаем оплату на сервере для orderId:", orderId);
-          const confirmRes = await apiFetch(`/api/orders/${orderId}/payment-status`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ paymentStatus: "CONFIRMED" }),
-          });
-  
-          if (!confirmRes.ok) throw new Error("Ошибка при подтверждении");
-          router.push("/");
-        } else if (status === "cancelled") {
-          toast("Платёж отменён ❌");
-        } else if (status === "failed") {
-          toast.error("Ошибка при оплате");
+      if (tg?.openInvoice) {
+        // Если WebApp есть, открываем через openInvoice
+        const invoiceId = data.invoice_url.split("/").pop();
+        if (!invoiceId) {
+          toast.error("Некорректная ссылка на счёт");
+          console.error("Не удалось извлечь invoiceId из invoice_url");
+          return;
         }
-      });
+  
+        console.log("Открываем оплату через Telegram WebApp...");
+        tg.openInvoice(invoiceId, (status: string) => {
+          console.log("Статус оплаты:", status);
+        });
+      } else {
+        // 2️⃣ Фолбек: просто открываем ссылку в новом окне
+        console.warn("Telegram WebApp не найден, открываем ссылку напрямую");
+        window.open(data.invoice_url, "_blank");
+      }
     } catch (err) {
       console.error("Ошибка в handleTelegramPay:", err);
       toast.error("Ошибка при создании счёта");
@@ -129,7 +77,6 @@ function StarsPayPageContent() {
   };
   
   
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-indigo-900 to-black text-white">
       {/* Header */}
