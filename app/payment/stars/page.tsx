@@ -5,11 +5,14 @@ import { ArrowLeft, Star } from "lucide-react";
 import { apiFetch } from "@/app/http";
 import { toast } from "react-hot-toast";
 import { useState, useEffect, Suspense } from "react";
+import { useUser } from "@/app/context/UserContext";
 
 export const dynamic = "force-dynamic";
 
 function StarsPayPageContent() {
   const router = useRouter();
+  const { user } = useUser(); // берём из контекста пользователя
+
   const searchParams = useSearchParams();
   const [starsPrice, setStarsPrice] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,79 +47,32 @@ function StarsPayPageContent() {
     }
   }, [priceUSD]);
 
-  const handleTelegramPay = async () => {
-    if (isLoading) return;
-    
-    setIsLoading(true);
-    
-    try {
-      console.log("📝 Создаём счёт на Stars...", starsPrice);
 
-      // Создаём счёт на сервере
+  const handleTelegramPay = async () => {
+    try {
+      console.log("Создаём счёт на Stars...", starsPrice);
+  
       const res = await apiFetch("/api/orders/stars", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          userId: user.telegramId, // <-- обязательно
           title: "Оплата заказа",
           description: `Покупка за ${starsPrice} Stars`,
           amount: starsPrice,
         }),
       });
-
+  
       const data = await res.json();
-      console.log("📄 Данные счёта:", data);
-
-      if (!data.invoice_url) {
-        toast.error("Не удалось создать счёт");
-        console.error("❌ invoice_url отсутствует в ответе API");
-        setIsLoading(false);
-        return;
-      }
-
-      const tg = window.Telegram?.WebApp;
-
-      if (tg && isTelegramAvailable) {
-        console.log("🚀 Открываем оплату через Telegram WebApp...");
-        
-        // ВАЖНО: openInvoice принимает ПОЛНУЮ ссылку, а не только ID
-        tg.openInvoice(data.invoice_url, (status: string) => {
-          console.log("💳 Статус оплаты:", status);
-          
-          setIsLoading(false);
-          
-          if (status === "paid") {
-            toast.success("Оплата успешна! ✅");
-            tg.showPopup?.({
-              title: "✅ Успешно!",
-              message: "Платёж выполнен успешно",
-              buttons: [{ type: "ok" }],
-            });
-            
-            // Перенаправляем на страницу успеха через 1 секунду
-            setTimeout(() => {
-              router.push("/success");
-            }, 1000);
-          } else if (status === "cancelled") {
-            toast.error("Платёж отменён");
-          } else if (status === "failed") {
-            toast.error("Ошибка платежа");
-          } else if (status === "pending") {
-            toast("Платёж в обработке...");
-          }
-        });
-      } else {
-        // Фолбек: открываем ссылку в новом окне
-        console.warn("⚠️ Telegram WebApp не найден, открываем ссылку напрямую");
-        toast("Открываем оплату в новом окне...");
-        window.open(data.invoice_url, "_blank");
-        setIsLoading(false);
-      }
+      if (!data.invoice_url) throw new Error("Не удалось создать счёт");
+  
+      window.open(data.invoice_url, "_blank"); // просто открываем ссылку
     } catch (err) {
-      console.error("❌ Ошибка в handleTelegramPay:", err);
+      console.error(err);
       toast.error("Ошибка при создании счёта");
-      setIsLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-indigo-900 to-black text-white">
