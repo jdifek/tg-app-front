@@ -13,9 +13,11 @@ export default function VideoCallPage() {
     { id: "30min", duration: "30 minutes", price: 399.99 },
   ];
 
+
+
   const handleBook = () => {
     if (selectedDuration) {
-      router.push(`/checkout?type=video-call&id=${selectedDuration}`);
+      router.push(`/payment?type=video_call&id=${selectedDuration.id}&price=${selectedDuration.price}`);
     }
   };
 
@@ -64,26 +66,27 @@ export default function VideoCallPage() {
               Select Duration:
             </h3>
             {durations.map((option) => (
-              <button
-                key={option.id}
-                onClick={() => setSelectedDuration(option.id)}
-                className={`w-full rounded-xl p-4 border-2 transition-all ${
-                  selectedDuration === option.id
-                    ? "border-purple-500 bg-purple-500 bg-opacity-20"
-                    : "border-gray-800 bg-gray-900 bg-opacity-50 hover:border-gray-700"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="text-left">
-                    <h4 className="font-semibold text-lg">{option.duration}</h4>
-                    <p className="text-sm text-gray-400">Video call session</p>
-                  </div>
-                  <div className="text-2xl font-bold text-purple-400">
-                    ${option.price}
-                  </div>
-                </div>
-              </button>
-            ))}
+  <button
+    key={option.id}
+    onClick={() => setSelectedDuration(option)}
+    className={`w-full rounded-xl p-4 border-2 transition-all ${
+      selectedDuration?.id === option.id
+        ? "border-purple-500 bg-purple-500 bg-opacity-20"
+        : "border-gray-800 bg-gray-900 bg-opacity-50 hover:border-gray-700"
+    }`}
+  >
+    <div className="flex items-center justify-between">
+      <div className="text-left">
+        <h4 className="font-semibold text-lg">{option.duration}</h4>
+        <p className="text-sm text-gray-400">Video call session</p>
+      </div>
+      <div className="text-2xl font-bold text-purple-400">
+        ${option.price}
+      </div>
+    </div>
+  </button>
+))}
+
           </div>
 
           {/* Booking Button */}

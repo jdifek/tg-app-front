@@ -34,9 +34,9 @@ export default function RatingPage() {
     },
   ];
 
-  const handleOrder = (typeId: any) => {
+  const handleOrder = (typeId: any, price: number) => {
     setSelectedType(typeId);
-    router.push(`/checkout?type=rating&id=${typeId}`);
+    router.push(`/payment?type=custom_video&id=${typeId}}&price=${price}`);
   };
 
   return (
@@ -86,7 +86,7 @@ export default function RatingPage() {
                 <div
                   key={type.id}
                   className={`bg-gradient-to-r ${type.color} rounded-xl p-5 cursor-pointer hover:scale-105 transition-transform`}
-                  onClick={() => handleOrder(type.id)}
+                  onClick={() => handleOrder(type.id, type.price)}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="bg-white bg-opacity-20 rounded-lg p-2">

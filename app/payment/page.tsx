@@ -12,11 +12,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "../http";
 import { useUser } from "../context/UserContext";
 export enum PaymentMethod {
-  CARD_CRYPTO = "card",   // Tribute (Card/Crypto)
-  USDT_TRC20  = "usdt",    // Оплата в USDT (TRC20)
-  PAYPAL      = "paypal",        // PayPal
-  STARS       = "stars",         // Telegram Stars
-  MANUAL      = "MANUAL",        // Ручная оплата
+  CARD_CRYPTO = "card", // Tribute (Card/Crypto)
+  USDT_TRC20 = "usdt", // Оплата в USDT (TRC20)
+  PAYPAL = "paypal", // PayPal
+  STARS = "stars", // Telegram Stars
+  MANUAL = "MANUAL", // Ручная оплата
 }
 // ✅ Оборачиваем компонент в Suspense
 export default function PaymentPageWrapper() {
@@ -32,18 +32,18 @@ export default function PaymentPageWrapper() {
 function PaymentPage() {
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useUser()
+  const { user } = useUser();
 
   const [selectedMethod, setSelectedMethod] = useState("");
 
   const router = useRouter();
-const searchParams = useSearchParams();
-const type = searchParams.get("type"); // "product" или "bundle"
-const id = searchParams.get("id");     // id товара или бандла
-const priceParam = searchParams.get("price");
-const totalPrice = priceParam ? parseFloat(priceParam) : 0;
-const shippingParam = searchParams.get("shipping");
-const shippingData = shippingParam ? JSON.parse(shippingParam) : {};
+  const searchParams = useSearchParams();
+  const type = searchParams.get("type"); // "product" или "bundle"
+  const id = searchParams.get("id"); // id товара или бандла
+  const priceParam = searchParams.get("price");
+  const totalPrice = priceParam ? parseFloat(priceParam) : 0;
+  const shippingParam = searchParams.get("shipping");
+  const shippingData = shippingParam ? JSON.parse(shippingParam) : {};
 
   useEffect(() => {
     if (id) {
@@ -86,35 +86,40 @@ const shippingData = shippingParam ? JSON.parse(shippingParam) : {};
       color: "from-yellow-500 to-orange-600",
     },
   ];
-  
 
   const handlePayment = async (methodId: PaymentMethod) => {
     if (!id || !type) return alert("Invalid order parameters");
-  
+
     setSelectedMethod(methodId);
-  
+
     try {
       const orderData = {
         userId: user.id,
-        orderType: type === "product" ? "PRODUCT" : "BUNDLE",
+        orderType: type === "product" ? "PRODUCT" :
+        type === "bundle" ? "BUNDLE" :
+        type === "vip" ? "VIP" :
+        type === "custom_video" ? "CUSTOM_VIDEO" :
+        type === "video_call" ? "VIDEO_CALL" :
+        type === "rating" ? "RATING" :
+        "PRODUCT",
         items: [{ id, type, quantity: 1, price: totalPrice }],
         paymentMethod: methodId,
         shipping: shippingData,
       };
-  
+
       const response = await apiFetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderData),
       });
-  
+
       if (!response.ok) {
         const err = await response.json();
         throw new Error(err.error || "Failed to create payment");
       }
-  
+
       const paymentResult = await response.json();
-  
+
       router.push(
         `/payment/${methodId}?orderId=${paymentResult.id}&price=${totalPrice}`
       );
@@ -123,8 +128,6 @@ const shippingData = shippingParam ? JSON.parse(shippingParam) : {};
       alert("Failed to create payment. Please try again.");
     }
   };
-  
-  
 
   if (loading) {
     return (
@@ -187,9 +190,9 @@ const shippingData = shippingParam ? JSON.parse(shippingParam) : {};
               const Icon = method.icon;
               return (
                 <button
-                key={method.id}
-                onClick={() => handlePayment(method.id)}
-                disabled={selectedMethod === method.id}
+                  key={method.id}
+                  onClick={() => handlePayment(method.id)}
+                  disabled={selectedMethod === method.id}
                   className={`w-full bg-gradient-to-r ${method.color} rounded-xl p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed`}
                 >
                   <div className="flex items-center space-x-4">

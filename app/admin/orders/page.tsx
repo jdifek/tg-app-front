@@ -2,7 +2,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, CheckCircle, XCircle, Clock, Package } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Clock, Package, CreditCard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/app/http";
 
@@ -20,6 +20,7 @@ export default function AdminOrdersPage() {
     try {
       const response = await apiFetch("/api/admin/orders");
       const data = await response.json();
+      console.log("Fetched orders:", data); // Для отладки
       setOrders(data);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -49,6 +50,28 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const updatePaymentStatus = async (orderId, newPaymentStatus) => {
+    try {
+      const response = await apiFetch(`/api/orders/${orderId}/payment-status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ paymentStatus: newPaymentStatus }),
+      });
+
+      if (response.ok) {
+        await fetchOrders();
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update payment status");
+      }
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      alert(`Failed to update payment status: ${error.message}`);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "COMPLETED":
@@ -60,6 +83,40 @@ export default function AdminOrdersPage() {
       default:
         return "bg-yellow-600";
     }
+  };
+
+  const getPaymentStatusColor = (paymentStatus) => {
+    switch (paymentStatus) {
+      case "CONFIRMED":
+        return "bg-green-600";
+      case "AWAITING_CHECK":
+        return "bg-orange-600";
+      case "FAILED":
+        return "bg-red-600";
+      default:
+        return "bg-yellow-600";
+    }
+  };
+
+  const getPaymentStatusLabel = (paymentStatus) => {
+    const labels = {
+      PENDING: "Pending",
+      AWAITING_CHECK: "Awaiting Check",
+      CONFIRMED: "Confirmed",
+      FAILED: "Failed",
+    };
+    return labels[paymentStatus] || paymentStatus;
+  };
+
+  const getPaymentMethodLabel = (method) => {
+    const labels = {
+      CARD_CRYPTO: "Card/Crypto",
+      USDT_TRC20: "USDT (TRC20)",
+      PAYPAL: "PayPal",
+      STARS: "Telegram Stars",
+      MANUAL: "Manual",
+    };
+    return labels[method] || method;
   };
 
   const getOrderTypeLabel = (type) => {
@@ -147,6 +204,15 @@ export default function AdminOrdersPage() {
                       >
                         {order.status}
                       </span>
+                      {order.paymentStatus && (
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold text-white ${getPaymentStatusColor(
+                            order.paymentStatus
+                          )}`}
+                        >
+                          💳 {getPaymentStatusLabel(order.paymentStatus)}
+                        </span>
+                      )}
                       <span className="text-xs text-gray-400">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </span>
@@ -172,7 +238,7 @@ export default function AdminOrdersPage() {
                     </p>
                     {order.paymentMethod && (
                       <p className="text-xs text-gray-400 mt-1">
-                        {order.paymentMethod}
+                        {getPaymentMethodLabel(order.paymentMethod)}
                       </p>
                     )}
                   </div>
@@ -230,29 +296,84 @@ export default function AdminOrdersPage() {
                   </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex space-x-2 pt-3 border-t border-gray-700">
+                {/* Payment Status Section */}
+                {order.paymentStatus && order.paymentStatus !== "CONFIRMED" && (
+                  <div className="mb-3 p-3 bg-gray-800 bg-opacity-50 rounded-lg border-l-4 border-orange-500">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold flex items-center">
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Payment Status Management
+                      </h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {order.paymentStatus === "PENDING" && (
+                        <button
+                          onClick={() =>
+                            updatePaymentStatus(order.id, "AWAITING_CHECK")
+                          }
+                          className="flex-1 min-w-[150px] bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                        >
+                          Mark Awaiting Check
+                        </button>
+                      )}
+                      {(order.paymentStatus === "PENDING" ||
+                        order.paymentStatus === "AWAITING_CHECK") && (
+                        <>
+                          <button
+                            onClick={() =>
+                              updatePaymentStatus(order.id, "CONFIRMED")
+                            }
+                            className="flex-1 min-w-[120px] bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                          >
+                            Confirm Payment
+                          </button>
+                          <button
+                            onClick={() =>
+                              updatePaymentStatus(order.id, "FAILED")
+                            }
+                            className="flex-1 min-w-[100px] bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                          >
+                            Mark Failed
+                          </button>
+                        </>
+                      )}
+                      {order.paymentStatus === "FAILED" && (
+                        <button
+                          onClick={() =>
+                            updatePaymentStatus(order.id, "PENDING")
+                          }
+                          className="flex-1 min-w-[150px] bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                        >
+                          Reset to Pending
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Order Status Actions */}
+                <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-700">
                   {order.status === "PENDING" && (
                     <>
                       <button
                         onClick={() =>
                           updateOrderStatus(order.id, "PROCESSING")
                         }
-                        className="flex-1 flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                        className="flex-1 min-w-[140px] flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                       >
                         <Clock className="w-4 h-4" />
                         <span>Mark Processing</span>
                       </button>
                       <button
                         onClick={() => updateOrderStatus(order.id, "COMPLETED")}
-                        className="flex-1 flex items-center justify-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                        className="flex-1 min-w-[100px] flex items-center justify-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>Complete</span>
                       </button>
                       <button
                         onClick={() => updateOrderStatus(order.id, "CANCELLED")}
-                        className="flex-1 flex items-center justify-center space-x-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                        className="flex-1 min-w-[80px] flex items-center justify-center space-x-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                       >
                         <XCircle className="w-4 h-4" />
                         <span>Cancel</span>
@@ -263,14 +384,14 @@ export default function AdminOrdersPage() {
                     <>
                       <button
                         onClick={() => updateOrderStatus(order.id, "COMPLETED")}
-                        className="flex-1 flex items-center justify-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                        className="flex-1 min-w-[100px] flex items-center justify-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>Complete</span>
                       </button>
                       <button
                         onClick={() => updateOrderStatus(order.id, "CANCELLED")}
-                        className="flex-1 flex items-center justify-center space-x-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                        className="flex-1 min-w-[80px] flex items-center justify-center space-x-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                       >
                         <XCircle className="w-4 h-4" />
                         <span>Cancel</span>

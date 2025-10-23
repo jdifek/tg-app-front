@@ -35,25 +35,9 @@ export default function VIPPage() {
     },
   ];
 
-  const handleSubscribe = async (planId: any, price: any) => {
-    const orderData = {
-      userId: user.id, // 👈 пока мок, потом заменишь на реального пользователя
-      orderType: "VIP",
-      items: [{ type: "VIP", quantity: 1, price: price }],
-    };
+  const handleSubscribe = async (planId: any, price: number) => {
+    router.push(`/payment?type=vip&id=${planId}&price=${price}`);
 
-    const response = await apiFetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderData),
-    });
-
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error || "Failed to create order");
-    }
-    const order = await response.json();
-    router.push(`/payment?orderId=${order.id}`);
   };
 
   return (

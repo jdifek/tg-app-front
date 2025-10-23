@@ -15,7 +15,7 @@ export default function CustomVideoPage() {
 
   const handleOrder = () => {
     if (selectedDuration) {
-      router.push(`/checkout?type=custom-video&id=${selectedDuration}`);
+      router.push(`/payment?type=custom_video&id=${selectedDuration.id}&price=${selectedDuration.price}`);
     }
   };
 
