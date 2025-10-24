@@ -66,7 +66,7 @@ export default function CustomVideoPage() {
             {durations.map((option) => (
               <button
                 key={option.id}
-                onClick={() => setSelectedDuration(option.id)}
+                onClick={() => setSelectedDuration(option)}
                 className={`w-full rounded-xl p-4 border-2 transition-all ${
                   selectedDuration === option.id
                     ? "border-purple-500 bg-purple-500 bg-opacity-20"

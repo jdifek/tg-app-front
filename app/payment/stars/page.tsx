@@ -11,29 +11,28 @@ export const dynamic = "force-dynamic";
 
 function StarsPayPageContent() {
   const router = useRouter();
-  const { user } = useUser(); // берём из контекста пользователя
+  const { user } = useUser();
 
   const searchParams = useSearchParams();
   const [starsPrice, setStarsPrice] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isTelegramAvailable, setIsTelegramAvailable] = useState(false);
 
-  // цена в долларах из параметров
   const priceUSD = searchParams.get("price")
     ? parseFloat(searchParams.get("price")!)
     : 0;
 
-  // курс Stars → USD
-  const USD_TO_STARS = 100; // 1 USD ≈ 100 Stars
+  const USD_TO_STARS = 100;
 
   useEffect(() => {
     setStarsPrice(Math.round(priceUSD * USD_TO_STARS));
     
-    // Проверяем доступность Telegram WebApp
     const checkTelegram = () => {
       if (window.Telegram?.WebApp) {
         setIsTelegramAvailable(true);
         window.Telegram.WebApp.ready();
+        // Разрешаем закрытие окна подтверждения
+        window.Telegram.WebApp.enableClosingConfirmation();
         console.log("✅ Telegram WebApp инициализирован");
       } else {
         setIsTelegramAvailable(false);
@@ -41,22 +40,26 @@ function StarsPayPageContent() {
       }
     };
 
-    // Даем время на загрузку скрипта
     if (typeof window !== "undefined") {
       setTimeout(checkTelegram, 100);
     }
   }, [priceUSD]);
 
-
   const handleTelegramPay = async () => {
+    if (!isTelegramAvailable) {
+      toast.error("Telegram WebApp недоступен. Откройте через Telegram.");
+      return;
+    }
+
     try {
+      setIsLoading(true);
       console.log("Создаём счёт на Stars...", starsPrice);
   
       const res = await apiFetch("/api/orders/stars", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user.telegramId, // <-- обязательно
+          userId: user.telegramId,
           title: "Оплата заказа",
           description: `Покупка за ${starsPrice} Stars`,
           amount: starsPrice,
@@ -64,15 +67,41 @@ function StarsPayPageContent() {
       });
   
       const data = await res.json();
-      if (!data.invoice_url) throw new Error("Не удалось создать счёт");
-  
-      window.open(data.invoice_url, "_blank"); // просто открываем ссылку
+      if (!data.invoice_url) {
+        throw new Error("Не удалось создать счёт");
+      }
+
+      console.log("✅ Invoice URL получен:", data.invoice_url);
+
+      // ПРАВИЛЬНЫЙ способ открытия ссылки в Telegram WebApp
+      if (window.Telegram?.WebApp) {
+        // Способ 1: Используем openLink (работает на всех платформах)
+        window.Telegram.WebApp.openLink(data.invoice_url);
+        
+        // Альтернативный способ 2: Используем openInvoice если у вас есть invoice_link
+        // window.Telegram.WebApp.openInvoice(data.invoice_url, (status) => {
+        //   if (status === "paid") {
+        //     toast.success("Оплата прошла успешно!");
+        //     router.push("/success");
+        //   } else if (status === "cancelled") {
+        //     toast.error("Оплата отменена");
+        //   } else if (status === "failed") {
+        //     toast.error("Ошибка оплаты");
+        //   }
+        // });
+
+        toast.success("Открываем форму оплаты...");
+      } else {
+        // Fallback для веб-версии
+        window.open(data.invoice_url, "_blank");
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Ошибка создания счёта:", err);
       toast.error("Ошибка при создании счёта");
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-indigo-900 to-black text-white">
@@ -91,10 +120,10 @@ function StarsPayPageContent() {
         </h1>
         <div className="w-10" />
       </div>
-
+  
       {/* Content */}
       <div className="max-w-md mx-auto p-5">
-        {/* Статус Telegram WebApp */}
+        {/* Telegram WebApp Status */}
         <div className="mb-4 p-3 bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg">
           <div className="flex items-center gap-2">
             <div
@@ -110,36 +139,36 @@ function StarsPayPageContent() {
           </div>
           {!isTelegramAvailable && (
             <p className="text-xs text-gray-400 mt-2">
-              Откройте приложение через Telegram для лучшего опыта
+              Откройте это приложение через Telegram для полного функционала.
             </p>
           )}
         </div>
-
+  
         <div className="bg-gray-900 bg-opacity-50 border border-indigo-500 rounded-2xl p-5">
           <h2 className="text-lg font-semibold text-indigo-400 mb-3">
-            Сумма платежа:{" "}
+            Сумма к оплате:{" "}
             <span className="text-white">
               {starsPrice} ⭐ ({priceUSD}$)
             </span>
           </h2>
-
+  
           <ul className="space-y-2">
-            <li>💫 Оплата осуществляется через Telegram Stars</li>
-            <li>💫 Нажмите кнопку "Оплатить в Telegram"</li>
-            <li>💫 После успешной оплаты подтвердите платёж</li>
+            <li>💫 Оплата через Telegram Stars</li>
+            <li>💫 Нажмите кнопку "Оплатить Stars"</li>
+            <li>💫 После оплаты подтвердите транзакцию</li>
           </ul>
-
+  
           <p className="text-yellow-400 font-semibold mt-3 text-sm">
-            * Stars списываются с вашего Telegram Wallet
+            * Stars списываются из вашего Telegram кошелька
           </p>
         </div>
-
+  
         {/* Pay Button */}
         <button
           onClick={handleTelegramPay}
-          disabled={isLoading}
+          disabled={isLoading || !isTelegramAvailable}
           className={`w-full mt-5 rounded-xl py-3 font-semibold text-white transition ${
-            isLoading
+            isLoading || !isTelegramAvailable
               ? "bg-gray-600 cursor-not-allowed"
               : "bg-indigo-600 hover:bg-indigo-700"
           }`}
@@ -153,16 +182,16 @@ function StarsPayPageContent() {
             "Оплатить Stars ⭐"
           )}
         </button>
-
-        {/* Дополнительная информация */}
+  
+        {/* Additional Info */}
         <div className="mt-5 p-4 bg-gray-800 bg-opacity-50 rounded-xl">
           <h3 className="text-sm font-semibold text-gray-300 mb-2">
             📌 Важная информация:
           </h3>
           <ul className="text-xs text-gray-400 space-y-1">
             <li>• Минимальная сумма: 1 Star</li>
-            <li>• Оплата мгновенная</li>
-            <li>• Возврат возможен в течение 48 часов</li>
+            <li>• Оплата моментальная</li>
+            <li>• Возврат доступен в течение 48 часов</li>
             <li>• Поддержка: @support_bot</li>
           </ul>
         </div>

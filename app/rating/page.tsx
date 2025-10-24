@@ -36,7 +36,7 @@ export default function RatingPage() {
 
   const handleOrder = (typeId: any, price: number) => {
     setSelectedType(typeId);
-    router.push(`/payment?type=custom_video&id=${typeId}}&price=${price}`);
+    router.push(`/payment?type=rating&id=${typeId}&price=${price}`);
   };
 
   return (

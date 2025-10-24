@@ -50,7 +50,7 @@ function PaymentPage() {
       setOrder({
         id: id,
         total: totalPrice,
-        items: [{ name: "Premium Photo Set", price: totalPrice }],
+        items: [{ name: type, price: totalPrice }],
       });
       setLoading(false);
     }
@@ -120,9 +120,16 @@ function PaymentPage() {
 
       const paymentResult = await response.json();
 
-      router.push(
-        `/payment/${methodId}?orderId=${paymentResult.id}&price=${totalPrice}`
-      );
+      if (type === "rating") {
+        router.push(
+          `/payment/${methodId}?orderId=${paymentResult.id}&price=${totalPrice}&rating=true`
+        );
+      } else {
+
+        router.push(
+          `/payment/${methodId}?orderId=${paymentResult.id}&price=${totalPrice}`
+        );
+      }
     } catch (error) {
       console.error("Payment creation failed:", error);
       alert("Failed to create payment. Please try again.");
@@ -143,6 +150,7 @@ function PaymentPage() {
       </div>
     );
   }
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">

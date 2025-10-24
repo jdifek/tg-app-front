@@ -42,47 +42,48 @@ function PayPalPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black text-white">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-800">
-        <button
-          onClick={() => router.back()}
-          className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-6 h-6 text-white" />
-        </button>
-        <h1 className="text-xl font-bold">Card</h1>
-        <div className="w-10" />
-      </div>
-
-      {/* Content */}
-      <div className="max-w-md mx-auto p-5">
-        <div className="bg-gray-900 bg-opacity-50 border border-pink-600 rounded-2xl p-5">
-          <h2 className="text-lg font-semibold text-pink-400 mb-3">
-            Сумма платежа: <span className="text-white">{price}$</span>
-          </h2>
-          <ul>
-            <li>🌸 Оплата осуществляется через сервис Tribute</li>
-            <li>🌸 Перейдите по ссылке:</li>
-            <li className="text-purple-400 font-semibold">
-              https://tribute.to/username
-            </li>
-            <li>🌸 После оплаты прикрепите скриншот и подтвердите платёж</li>
-          </ul>
-
-          <p className="text-red-500 font-bold mt-3">
-            ❗ За другие комментарии получите БАН ❗
-          </p>
-        </div>
-
-        {/* Confirm Button */}
-        <button
-          onClick={handleConfirmPayment}
-          className="w-full mt-5 bg-pink-600 hover:bg-pink-700 rounded-xl py-3 font-semibold text-white transition"
-        >
-          Подтвердить платёж
-        </button>
-      </div>
+    {/* Header */}
+    <div className="flex items-center justify-between p-4 border-b border-gray-800">
+      <button
+        onClick={() => router.back()}
+        className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+      >
+        <ArrowLeft className="w-6 h-6 text-white" />
+      </button>
+      <h1 className="text-xl font-bold">Card</h1>
+      <div className="w-10" />
     </div>
+  
+    {/* Content */}
+    <div className="max-w-md mx-auto p-5">
+      <div className="bg-gray-900 bg-opacity-50 border border-pink-600 rounded-2xl p-5">
+        <h2 className="text-lg font-semibold text-pink-400 mb-3">
+          Payment amount: <span className="text-white">{price}$</span>
+        </h2>
+        <ul>
+          <li>🌸 Payment is processed via the Tribute service</li>
+          <li>🌸 Go to the following link:</li>
+          <li className="text-purple-400 font-semibold">
+            https://tribute.to/username
+          </li>
+          <li>🌸 After completing the payment, attach a screenshot and confirm the transaction</li>
+        </ul>
+  
+        <p className="text-red-500 font-bold mt-3">
+          ❗ Any other comments will result in a BAN ❗
+        </p>
+      </div>
+  
+      {/* Confirm Button */}
+      <button
+        onClick={handleConfirmPayment}
+        className="w-full mt-5 bg-pink-600 hover:bg-pink-700 rounded-xl py-3 font-semibold text-white transition"
+      >
+        Confirm Payment
+      </button>
+    </div>
+  </div>
+  
   );
 }
 
@@ -90,7 +91,7 @@ export default function PayPalPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center">
-        <div className="text-white text-xl">Загрузка...</div>
+        <div className="text-white text-xl">Loading...</div>
       </div>
     }>
       <PayPalPageContent />
