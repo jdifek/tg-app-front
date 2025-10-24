@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Upload, X } from "lucide-react";
 import { apiFetch } from "@/app/http";
@@ -17,9 +17,16 @@ export default function PayPalPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const orderId = new URLSearchParams(window.location.search).get("orderId");
-  const rating = new URLSearchParams(window.location.search).get("rating"); // new
-
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [rating, setRating] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setOrderId(params.get("orderId"));
+      setRating(params.get("rating"));
+    }
+  }, []);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {

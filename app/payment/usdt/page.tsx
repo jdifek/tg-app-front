@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Copy, Upload, X } from "lucide-react";
@@ -18,9 +18,16 @@ export default function UsdtPaymentPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const address = "TQx9vF3s1GJH2A7xXp6f5rN8W4tK9mE8nP3";
-  const orderId = new URLSearchParams(window.location.search).get("orderId");
-  const rating = new URLSearchParams(window.location.search).get("rating"); // new
-
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [rating, setRating] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setOrderId(params.get("orderId"));
+      setRating(params.get("rating"));
+    }
+  }, []);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
