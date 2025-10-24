@@ -31,9 +31,9 @@ function StarsPayPageContent() {
       if (window.Telegram?.WebApp) {
         setIsTelegramAvailable(true);
         window.Telegram.WebApp.ready();
-        // Разрешаем закрытие окна подтверждения
-        window.Telegram.WebApp.enableClosingConfirmation();
+        window.Telegram.WebApp.expand();
         console.log("✅ Telegram WebApp инициализирован");
+        console.log("Platform:", window.Telegram.WebApp.platform);
       } else {
         setIsTelegramAvailable(false);
         console.warn("⚠️ Telegram WebApp не найден");
@@ -67,38 +67,66 @@ function StarsPayPageContent() {
       });
   
       const data = await res.json();
-      if (!data.invoice_url) {
+      
+      if (!data.invoice_url && !data.invoice_link) {
         throw new Error("Не удалось создать счёт");
       }
 
-      console.log("✅ Invoice URL получен:", data.invoice_url);
+      console.log("✅ Invoice получен:", data);
 
-      // ПРАВИЛЬНЫЙ способ открытия ссылки в Telegram WebApp
-      if (window.Telegram?.WebApp) {
-        // Способ 1: Используем openLink (работает на всех платформах)
-        window.Telegram.WebApp.openLink(data.invoice_url);
-        
-        // Альтернативный способ 2: Используем openInvoice если у вас есть invoice_link
-        // window.Telegram.WebApp.openInvoice(data.invoice_url, (status) => {
-        //   if (status === "paid") {
-        //     toast.success("Оплата прошла успешно!");
-        //     router.push("/success");
-        //   } else if (status === "cancelled") {
-        //     toast.error("Оплата отменена");
-        //   } else if (status === "failed") {
-        //     toast.error("Ошибка оплаты");
-        //   }
-        // });
+      // Извлекаем slug из URL (для openInvoice)
+      // Формат: https://t.me/$botusername?start=invoice_SLUG или https://t.me/invoice/SLUG
+      const invoiceUrl = data.invoice_url || data.invoice_link;
+      let invoiceSlug = null;
 
-        toast.success("Открываем форму оплаты...");
-      } else {
-        // Fallback для веб-версии
-        window.open(data.invoice_url, "_blank");
+      // Пытаемся извлечь slug из разных форматов
+      if (invoiceUrl.includes('/invoice/')) {
+        // Формат: https://t.me/invoice/SLUG
+        invoiceSlug = invoiceUrl.split('/invoice/')[1];
+      } else if (invoiceUrl.includes('start=')) {
+        // Формат: https://t.me/bot?start=SLUG
+        invoiceSlug = invoiceUrl.split('start=')[1];
       }
+
+      console.log("Invoice slug:", invoiceSlug);
+
+      if (invoiceSlug && window.Telegram?.WebApp?.openInvoice) {
+        // ПРАВИЛЬНЫЙ метод для Stars платежей
+        window.Telegram.WebApp.openInvoice(invoiceSlug, (status) => {
+          console.log("Статус оплаты:", status);
+          
+          setIsLoading(false);
+          
+          if (status === "paid") {
+            toast.success("Оплата прошла успешно! ✅");
+            // Можете добавить логику подтверждения на сервере
+            setTimeout(() => {
+              router.push("/success"); // или другая страница успеха
+            }, 1500);
+          } else if (status === "cancelled") {
+            toast.error("Оплата отменена");
+          } else if (status === "failed") {
+            toast.error("Ошибка оплаты");
+          } else if (status === "pending") {
+            toast("Ожидание оплаты...", { icon: "⏳" });
+          }
+        });
+
+        toast("Открываем форму оплаты...", { icon: "💫" });
+      } else {
+        // Fallback: если не удалось извлечь slug
+        console.warn("Не удалось извлечь invoice slug, используем openTelegramLink");
+        if (window.Telegram?.WebApp?.openTelegramLink) {
+          window.Telegram.WebApp.openTelegramLink(invoiceUrl);
+        } else {
+          window.Telegram.WebApp.openLink(invoiceUrl);
+        }
+        setIsLoading(false);
+      }
+
     } catch (err) {
       console.error("Ошибка создания счёта:", err);
       toast.error("Ошибка при создании счёта");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -137,6 +165,11 @@ function StarsPayPageContent() {
                 : "⚠️ Telegram WebApp недоступен"}
             </span>
           </div>
+          {isTelegramAvailable && window.Telegram?.WebApp?.platform && (
+            <p className="text-xs text-gray-400 mt-1">
+              Платформа: {window.Telegram.WebApp.platform}
+            </p>
+          )}
           {!isTelegramAvailable && (
             <p className="text-xs text-gray-400 mt-2">
               Откройте это приложение через Telegram для полного функционала.
@@ -155,7 +188,8 @@ function StarsPayPageContent() {
           <ul className="space-y-2">
             <li>💫 Оплата через Telegram Stars</li>
             <li>💫 Нажмите кнопку "Оплатить Stars"</li>
-            <li>💫 После оплаты подтвердите транзакцию</li>
+            <li>💫 Оплатите в открывшейся форме</li>
+            <li>💫 После оплаты вы вернетесь в приложение</li>
           </ul>
   
           <p className="text-yellow-400 font-semibold mt-3 text-sm">
@@ -191,6 +225,7 @@ function StarsPayPageContent() {
           <ul className="text-xs text-gray-400 space-y-1">
             <li>• Минимальная сумма: 1 Star</li>
             <li>• Оплата моментальная</li>
+            <li>• После оплаты вы останетесь в приложении</li>
             <li>• Возврат доступен в течение 48 часов</li>
             <li>• Поддержка: @support_bot</li>
           </ul>
