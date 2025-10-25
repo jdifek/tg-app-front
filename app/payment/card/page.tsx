@@ -1,100 +1,70 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { apiFetch } from "@/app/http";
-import { toast } from "react-hot-toast";
-import { Suspense } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Check } from "lucide-react";
 
-export const dynamic = "force-dynamic"; 
+export const dynamic = "force-dynamic";
 
-function PayPalPageContent() {
+export default function ThankYouPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const price = searchParams.get("price")
-    ? parseFloat(searchParams.get("price")!)
-    : 0;
-
-  const handleConfirmPayment = async () => {
-    const orderId = searchParams.get("orderId");
-    
-    if (!orderId) {
-      toast.error("Order ID не найден");
-      return;
+  const [orderId, setOrderId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setOrderId(params.get("orderId"));
     }
-
-    try {
-      const res = await apiFetch(`/api/orders/${orderId}/payment-status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentStatus: "AWAITING_CHECK" }),
-      });
-
-      if (!res.ok) throw new Error("Failed to update payment status");
-
-      toast.success("Платёж отправлен на проверку");
-      router.push("/");
-    } catch (err) {
-      console.error(err);
-      toast.error("Ошибка при обновлении статуса платежа");
-    }
-  };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black text-white">
-    {/* Header */}
-    <div className="flex items-center justify-between p-4 border-b border-gray-800">
-      <button
-        onClick={() => router.back()}
-        className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-      >
-        <ArrowLeft className="w-6 h-6 text-white" />
-      </button>
-      <h1 className="text-xl font-bold">Card</h1>
-      <div className="w-10" />
-    </div>
-  
-    {/* Content */}
-    <div className="max-w-md mx-auto p-5">
-      <div className="bg-gray-900 bg-opacity-50 border border-pink-600 rounded-2xl p-5">
-        <h2 className="text-lg font-semibold text-pink-400 mb-3">
-          Payment amount: <span className="text-white">{price}$</span>
-        </h2>
-        <ul>
-          <li>🌸 Payment is processed via the Tribute service</li>
-          <li>🌸 Go to the following link:</li>
-          <li className="text-purple-400 font-semibold">
-            https://tribute.to/username
-          </li>
-          <li>🌸 After completing the payment, attach a screenshot and confirm the transaction</li>
-        </ul>
-  
-        <p className="text-red-500 font-bold mt-3">
-          ❗ Any other comments will result in a BAN ❗
-        </p>
-      </div>
-  
-      {/* Confirm Button */}
-      <button
-        onClick={handleConfirmPayment}
-        className="w-full mt-5 bg-pink-600 hover:bg-pink-700 rounded-xl py-3 font-semibold text-white transition"
-      >
-        Confirm Payment
-      </button>
-    </div>
-  </div>
-  
-  );
-}
+    <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+          <button
+            onClick={() => router.push("/")}
+            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6 text-white" />
+          </button>
+          <h1 className="text-xl font-bold text-white">Order Confirmed</h1>
+          <div className="w-10" />
+        </div>
 
-export default function PayPalPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="p-4">
+          <div className="bg-gray-900 bg-opacity-50 rounded-xl p-6 border border-gray-800">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500 bg-opacity-20 rounded-full mb-6">
+                <Check className="w-10 h-10 text-green-500" />
+              </div>
+              
+              <h2 className="text-2xl font-bold text-white mb-3">
+                Thank You for Your Order!
+              </h2>
+              
+              {orderId && (
+                <p className="text-gray-400 text-sm mb-6">
+                  Order ID: <span className="text-purple-400 font-mono">{orderId}</span>
+                </p>
+              )}
+              
+              <div className="bg-gray-800 bg-opacity-50 rounded-lg p-6 mb-6">
+                <p className="text-gray-300 text-lg leading-relaxed">
+                  I'll text you soon with payment details
+                </p>
+              </div>
+
+              <button
+                onClick={() => router.push("/")}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold py-4 rounded-xl hover:scale-105 transition-transform"
+              >
+                Back to Home
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    }>
-      <PayPalPageContent />
-    </Suspense>
+    </div>
   );
 }

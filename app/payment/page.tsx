@@ -91,7 +91,7 @@ function PaymentPage() {
     if (!id || !type) return alert("Invalid order parameters");
 
     setSelectedMethod(methodId);
-
+   
     try {
       const orderData = {
         userId: user.id,
