@@ -105,7 +105,6 @@ export default function AdminOrdersPage() {
       }
     } catch (error) {
       console.error("Error sending feedback:", error);
-      alert("Failed to send feedback. Please try again.");
     } finally {
       setSendingFeedback({ ...sendingFeedback, [orderId]: false });
     }
@@ -351,7 +350,7 @@ export default function AdminOrdersPage() {
                         />
                         <button
                           onClick={() =>
-                            sendRatingFeedback(order.id, order.user.telegramId)
+                            sendRatingFeedback(order.id, order.userId)
                           }
                           disabled={
                             sendingFeedback[order.id] ||
