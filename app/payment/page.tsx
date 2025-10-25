@@ -95,6 +95,8 @@ function PaymentPage() {
     try {
       const orderData = {
         userId: user.id,
+        firstName: user.first_name,
+        username: user.username,
         orderType: type === "product" ? "PRODUCT" :
         type === "bundle" ? "BUNDLE" :
         type === "vip" ? "VIP" :

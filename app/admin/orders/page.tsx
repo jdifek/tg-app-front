@@ -2,7 +2,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, CheckCircle, XCircle, Clock, Package, CreditCard } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Clock, Package, CreditCard, Image as ImageIcon, Star, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/app/http";
 
@@ -11,6 +11,9 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
+  const [viewingImage, setViewingImage] = useState(null);
+  const [ratingFeedback, setRatingFeedback] = useState({});
+  const [sendingFeedback, setSendingFeedback] = useState({});
 
   useEffect(() => {
     fetchOrders();
@@ -20,7 +23,7 @@ export default function AdminOrdersPage() {
     try {
       const response = await apiFetch("/api/admin/orders");
       const data = await response.json();
-      console.log("Fetched orders:", data); // Для отладки
+      console.log("Fetched orders:", data);
       setOrders(data);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -69,6 +72,42 @@ export default function AdminOrdersPage() {
     } catch (error) {
       console.error("Error updating payment status:", error);
       alert(`Failed to update payment status: ${error.message}`);
+    }
+  };
+
+  const sendRatingFeedback = async (orderId, userId) => {
+    const feedback = ratingFeedback[orderId];
+    if (!feedback || !feedback.trim()) {
+      alert("Please enter feedback message");
+      return;
+    }
+
+    setSendingFeedback({ ...sendingFeedback, [orderId]: true });
+
+    try {
+      const response = await apiFetch("/api/admin/send-feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userId,
+          orderId: orderId,
+          message: feedback,
+        }),
+      });
+
+      if (response.ok) {
+        alert("Feedback sent successfully!");
+        setRatingFeedback({ ...ratingFeedback, [orderId]: "" });
+      } else {
+        throw new Error("Failed to send feedback");
+      }
+    } catch (error) {
+      console.error("Error sending feedback:", error);
+      alert("Failed to send feedback. Please try again.");
+    } finally {
+      setSendingFeedback({ ...sendingFeedback, [orderId]: false });
     }
   };
 
@@ -244,6 +283,104 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
+                {/* Payment Screenshot */}
+                {order.screenshot && (
+                  <div className="mb-3 p-3 bg-gray-800 bg-opacity-50 rounded-lg border-l-4 border-blue-500">
+                    <h4 className="text-sm font-semibold mb-2 flex items-center">
+                      <ImageIcon className="w-4 h-4 mr-2" />
+                      Payment Screenshot
+                    </h4>
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={order.screenshot}
+                        alt="Payment screenshot"
+                        className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setViewingImage(order.screenshot)}
+                      />
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-400 mb-2">
+                          Click to view full size
+                        </p>
+                        <button
+                          onClick={() => window.open(order.screenshot, "_blank")}
+                          className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+                        >
+                          Open in new tab
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rating Photo (Dick Rating) */}
+                {order.rating && order.orderType === "RATING" && (
+                  <div className="mb-3 p-3 bg-gradient-to-r from-pink-900 to-purple-900 bg-opacity-50 rounded-lg border-l-4 border-pink-500">
+                    <h4 className="text-sm font-semibold mb-2 flex items-center">
+                      <Star className="w-4 h-4 mr-2 text-yellow-400" />
+                      Dick Rating Request
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <img
+                          src={order.rating}
+                          alt="Rating photo"
+                          className="w-full max-h-64 object-contain rounded-lg cursor-pointer hover:opacity-80 transition-opacity bg-gray-900"
+                          onClick={() => setViewingImage(order.rating)}
+                        />
+                        <button
+                          onClick={() => window.open(order.rating, "_blank")}
+                          className="mt-2 w-full text-xs bg-pink-600 hover:bg-pink-700 text-white px-3 py-1 rounded transition-colors"
+                        >
+                          View Full Size
+                        </button>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-300 mb-1 block">
+                          Send Feedback to User:
+                        </label>
+                        <textarea
+                          value={ratingFeedback[order.id] || ""}
+                          onChange={(e) =>
+                            setRatingFeedback({
+                              ...ratingFeedback,
+                              [order.id]: e.target.value,
+                            })
+                          }
+                          placeholder="Enter your rating feedback here..."
+                          className="w-full h-24 bg-gray-800 text-white rounded-lg p-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        />
+                        <button
+                          onClick={() =>
+                            sendRatingFeedback(order.id, order.user.telegramId)
+                          }
+                          disabled={
+                            sendingFeedback[order.id] ||
+                            !ratingFeedback[order.id]?.trim()
+                          }
+                          className={`mt-2 w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm ${
+                            sendingFeedback[order.id] ||
+                            !ratingFeedback[order.id]?.trim()
+                              ? "bg-gray-600 cursor-not-allowed"
+                              : "bg-pink-600 hover:bg-pink-700 text-white"
+                          }`}
+                        >
+                          {sendingFeedback[order.id] ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <span>Sending...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4" />
+                              <span>Send Feedback to DM</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Order Items */}
                 {order.orderItems && order.orderItems.length > 0 && (
                   <div className="mb-3 p-3 bg-gray-800 bg-opacity-50 rounded-lg">
@@ -410,6 +547,28 @@ export default function AdminOrdersPage() {
           </div>
         )}
       </div>
+
+      {/* Image Viewer Modal */}
+      {viewingImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          onClick={() => setViewingImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-full">
+            <button
+              onClick={() => setViewingImage(null)}
+              className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full"
+            >
+              <XCircle className="w-6 h-6" />
+            </button>
+            <img
+              src={viewingImage}
+              alt="Full size view"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
