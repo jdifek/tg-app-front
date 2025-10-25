@@ -2,7 +2,17 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, CheckCircle, XCircle, Clock, Package, CreditCard, Image as ImageIcon, Star, Send } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Package,
+  CreditCard,
+  Image as ImageIcon,
+  Star,
+  Send,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/app/http";
 
@@ -263,10 +273,19 @@ export default function AdminOrdersPage() {
                     </p>
                     {order.user && (
                       <p className="text-sm text-gray-400">
-                        User:{" "}
-                        {order.user.firstName ||
-                          order.user.username ||
-                          order.user.telegramId}
+                        User: {order?.user?.firstName}
+                        {order?.user?.username ? (
+                          <a
+                            href={`https://t.me/${order.user.username}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 ml-1 hover:underline"
+                          >
+                            @{order.user.username}
+                          </a>
+                        ) : (
+                          <p>Без Telegram</p>
+                        )}
                       </p>
                     )}
                   </div>
@@ -301,7 +320,9 @@ export default function AdminOrdersPage() {
                           Click to view full size
                         </p>
                         <button
-                          onClick={() => window.open(order.screenshot, "_blank")}
+                          onClick={() =>
+                            window.open(order.screenshot, "_blank")
+                          }
                           className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
                         >
                           Open in new tab

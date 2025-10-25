@@ -44,7 +44,22 @@ function PaymentPage() {
   const totalPrice = priceParam ? parseFloat(priceParam) : 0;
   const shippingParam = searchParams.get("shipping");
   const shippingData = shippingParam ? JSON.parse(shippingParam) : {};
-
+  const mapPaymentMethodToBackend = (method: PaymentMethod) => {
+    switch (method) {
+      case PaymentMethod.CARD_CRYPTO:
+        return "CARD_CRYPTO";
+      case PaymentMethod.USDT_TRC20:
+        return "USDT_TRC20";
+      case PaymentMethod.PAYPAL:
+        return "PAYPAL";
+      case PaymentMethod.STARS:
+        return "STARS";
+      case PaymentMethod.MANUAL:
+        return "MANUAL";
+      default:
+        return "MANUAL";
+    }
+  };
   useEffect(() => {
     if (id) {
       setOrder({
@@ -106,7 +121,7 @@ function PaymentPage() {
         type === "rating" ? "RATING" :
         "PRODUCT",
         items: [{ id, type, quantity: 1, price: totalPrice }],
-        paymentMethod: methodId,
+        paymentMethod: mapPaymentMethodToBackend(methodId), // ← форматируем тут
         shipping: shippingData,
       };
 
