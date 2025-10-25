@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/app/http";
+import toast from "react-hot-toast";
 
 export default function AdminOrdersPage() {
   const router = useRouter();
@@ -24,7 +25,8 @@ export default function AdminOrdersPage() {
   const [viewingImage, setViewingImage] = useState(null);
   const [ratingFeedback, setRatingFeedback] = useState({});
   const [sendingFeedback, setSendingFeedback] = useState({});
-
+  const [customMessage, setCustomMessage] = useState({});
+  const [sendingMessage, setSendingMessage] = useState({});
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -62,7 +64,40 @@ export default function AdminOrdersPage() {
       alert("Failed to update order. Please try again.");
     }
   };
-
+  const sendCustomMessage = async (orderId, userId) => {
+    const message = customMessage[orderId];
+    if (!message || !message.trim()) {
+      alert("Please enter a message");
+      return;
+    }
+  
+    setSendingMessage({ ...sendingMessage, [orderId]: true });
+  
+    try {
+      const response = await apiFetch("/api/admin/send-message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userId,
+          message: message,
+        }),
+      });
+  
+      if (response.ok) {
+        toast.success("Message sent successfully!");
+        setCustomMessage({ ...customMessage, [orderId]: "" });
+      } else {
+        throw new Error("Failed to send message");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message. Please try again.");
+    } finally {
+      setSendingMessage({ ...sendingMessage, [orderId]: false });
+    }
+  };
   const updatePaymentStatus = async (orderId, newPaymentStatus) => {
     try {
       const response = await apiFetch(`/api/orders/${orderId}/payment-status`, {
@@ -452,7 +487,47 @@ export default function AdminOrdersPage() {
                     </pre>
                   </div>
                 )}
-
+{/* Custom Message Section */}
+<div className="mb-3 p-3 bg-gradient-to-r from-blue-900 to-indigo-900 bg-opacity-50 rounded-lg border-l-4 border-blue-500">
+  <h4 className="text-sm font-semibold mb-2 flex items-center">
+    <Send className="w-4 h-4 mr-2 text-blue-400" />
+    Send Custom Message to User
+  </h4>
+  <textarea
+    value={customMessage[order.id] || ""}
+    onChange={(e) =>
+      setCustomMessage({
+        ...customMessage,
+        [order.id]: e.target.value,
+      })
+    }
+    placeholder="Write any message to send to the user..."
+    className="w-full h-24 bg-gray-800 text-white rounded-lg p-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+  />
+  <button
+    onClick={() => sendCustomMessage(order.id, order.telegramId)}
+    disabled={
+      sendingMessage[order.id] || !customMessage[order.id]?.trim()
+    }
+    className={`w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm ${
+      sendingMessage[order.id] || !customMessage[order.id]?.trim()
+        ? "bg-gray-600 cursor-not-allowed"
+        : "bg-blue-600 hover:bg-blue-700 text-white"
+    }`}
+  >
+    {sendingMessage[order.id] ? (
+      <>
+        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        <span>Sending...</span>
+      </>
+    ) : (
+      <>
+        <Send className="w-4 h-4" />
+        <span>Send Message to DM</span>
+      </>
+    )}
+  </button>
+</div>
                 {/* Payment Status Section */}
                 {order.paymentStatus && order.paymentStatus !== "CONFIRMED" && (
                   <div className="mb-3 p-3 bg-gray-800 bg-opacity-50 rounded-lg border-l-4 border-orange-500">
