@@ -44,7 +44,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const handleLogin = (tgUser: any) => {
       api
-        .registerUser(tgUser.id.toString(), tgUser.first_name || tgUser.username || "User")
+        .registerUser(tgUser.id.toString(), tgUser.first_name || "User", tgUser.username)
         .then((registeredUser: any) => {
           setUser({
             ...MOCK_USER, // начинаем с мока

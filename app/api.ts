@@ -88,8 +88,8 @@ export default {
     // Если ничего не найдено
     return [];
   },
-  registerUser: (telegramId: string, firstName: string): Promise<User> =>
-    api.post("/api/users", { telegramId, firstName }),
+  registerUser: (telegramId: string, firstName: string, username: string): Promise<User> =>
+    api.post("/api/users", { telegramId, firstName, username }),
 
   getUser: (telegramId: string): Promise<User> =>
     api.get(`/user/${telegramId}`),
