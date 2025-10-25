@@ -94,7 +94,8 @@ function PaymentPage() {
 
     try {
       const orderData = {
-        userId: user.telegramId,
+        userId: user.id,
+        telegramId: user.telegramId,
         firstName: user.first_name,
         username: user.username,
         orderType: type === "product" ? "PRODUCT" :

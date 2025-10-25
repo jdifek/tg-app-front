@@ -350,7 +350,7 @@ export default function AdminOrdersPage() {
                         />
                         <button
                           onClick={() =>
-                            sendRatingFeedback(order.id, order.userId)
+                            sendRatingFeedback(order.id, order.telegramId)
                           }
                           disabled={
                             sendingFeedback[order.id] ||
