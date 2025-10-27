@@ -68,8 +68,8 @@ export default function CustomVideoPage() {
                 key={option.id}
                 onClick={() => setSelectedDuration(option)}
                 className={`w-full rounded-xl p-4 border-2 transition-all ${
-                  selectedDuration.id === option.id
-                    ? "border-purple-800 bg-purple-800 bg-opacity-20"
+                  selectedDuration &&  selectedDuration.id === option.id
+                    ? "border-purple-800 bg-purple-400 bg-opacity-20"
                     : "border-gray-800 bg-gray-900 bg-opacity-50 hover:border-gray-700"
                 }`}
               >
