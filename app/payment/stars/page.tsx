@@ -48,49 +48,79 @@ function StarsPayPageContent() {
 
   // Check payment status periodically after invoice is opened
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId) {
+      console.log("⚠️ No orderId, skipping payment check");
+      return;
+    }
+
+    console.log("🔍 Starting payment check for order:", orderId);
+    let isActive = true;
 
     const checkPaymentStatus = async () => {
+      if (!isActive) return false;
+
       try {
+        console.log("🔄 Checking payment status...");
         const res = await apiFetch(`/api/orders/detail/${orderId}`);
+        
+        if (!res.ok) {
+          console.error("❌ Failed to fetch order");
+          return false;
+        }
+
         const order = await res.json();
+        console.log("📦 Order status:", order.paymentStatus, order.status);
 
         if (order.paymentStatus === "CONFIRMED") {
-          toast.success("Payment confirmed! ✅");
-          setIsLoading(false);
-          setTimeout(() => router.push("/"), 1500);
+          console.log("✅ PAYMENT CONFIRMED!");
+          if (isActive) {
+            toast.success("Payment confirmed! ✅");
+            setIsLoading(false);
+            setTimeout(() => {
+              router.push("/");
+            }, 1500);
+          }
           return true;
         }
+
         return false;
       } catch (err) {
-        console.error("Error checking payment status:", err);
+        console.error("❌ Error checking payment:", err);
         return false;
       }
     };
 
-    // Check immediately
-    checkPaymentStatus();
+    // Check immediately after 1 second
+    const initialCheck = setTimeout(() => {
+      checkPaymentStatus();
+    }, 1000);
 
     // Then check every 2 seconds for up to 5 minutes
+    let checks = 0;
     const interval = setInterval(async () => {
+      checks++;
+      if (checks > 150) {
+        clearInterval(interval);
+        if (isActive) {
+          setIsLoading(false);
+          toast("Payment verification timeout. Please check your orders.", {
+            icon: "⏱️",
+          });
+        }
+        return;
+      }
+
       const confirmed = await checkPaymentStatus();
       if (confirmed) {
         clearInterval(interval);
       }
     }, 2000);
 
-    // Stop checking after 5 minutes
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      setIsLoading(false);
-      toast("Payment verification timeout. Please check your orders.", {
-        icon: "⏱️",
-      });
-    }, 300000);
-
     return () => {
+      console.log("🧹 Cleanup payment check");
+      isActive = false;
+      clearTimeout(initialCheck);
       clearInterval(interval);
-      clearTimeout(timeout);
     };
   }, [orderId, router]);
 
@@ -154,13 +184,9 @@ function StarsPayPageContent() {
 
       if (invoiceSlug && window.Telegram?.WebApp?.openInvoice) {
         // Open payment form
-        // NOTE: Telegram does NOT pass payment status to this callback
-        // We need to check payment status via webhook/polling instead
         window.Telegram.WebApp.openInvoice(invoiceSlug, () => {
           console.log("Payment form closed");
-          // Just show a message that we're checking payment
           toast("Checking payment status...", { icon: "🔍" });
-          // Status checking happens in useEffect above
         });
 
         toast("Opening payment form...", { icon: "💫" });
@@ -173,13 +199,10 @@ function StarsPayPageContent() {
           window.Telegram.WebApp.openLink(invoiceUrl);
         }
 
-        toast(
-          "Payment opened in Telegram. Return to check status.",
-          { icon: "💫", duration: 5000 }
-        );
-
-        // Still try to check status
-        // User will need to return to app manually
+        toast("Payment opened in Telegram. Return to check status.", {
+          icon: "💫",
+          duration: 5000,
+        });
       }
     } catch (err) {
       console.error("Invoice creation error:", err);
