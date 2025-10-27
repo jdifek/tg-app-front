@@ -152,7 +152,7 @@ function StarsPayPageContent() {
       {/* Content */}
       <div className="max-w-md mx-auto p-5">
         {/* Telegram WebApp Status */}
-        <div className="mb-4 p-3 bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg">
+        {/* <div className="mb-4 p-3 bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg">
           <div className="flex items-center gap-2">
             <div
               className={`w-3 h-3 rounded-full ${
@@ -176,7 +176,7 @@ function StarsPayPageContent() {
             </p>
           )}
         </div>
-  
+   */}
         <div className="bg-gray-900 bg-opacity-50 border border-indigo-500 rounded-2xl p-5">
           <h2 className="text-lg font-semibold text-indigo-400 mb-3">
             Сумма к оплате:{" "}
