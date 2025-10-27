@@ -26,17 +26,17 @@ function StarsPayPageContent() {
 
   useEffect(() => {
     setStarsPrice(Math.round(priceUSD * USD_TO_STARS));
-    
+
     const checkTelegram = () => {
       if (window.Telegram?.WebApp) {
         setIsTelegramAvailable(true);
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
-        console.log("✅ Telegram WebApp инициализирован");
+        console.log("✅ Telegram WebApp initialized");
         console.log("Platform:", window.Telegram.WebApp.platform);
       } else {
         setIsTelegramAvailable(false);
-        console.warn("⚠️ Telegram WebApp не найден");
+        console.warn("⚠️ Telegram WebApp not found");
       }
     };
 
@@ -47,75 +47,67 @@ function StarsPayPageContent() {
 
   const handleTelegramPay = async () => {
     if (!isTelegramAvailable) {
-      toast.error("Telegram WebApp недоступен. Откройте через Telegram.");
+      toast.error("Telegram WebApp is not available. Open this in Telegram.");
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log("Создаём счёт на Stars...", starsPrice);
-  
+      console.log("Creating invoice for Stars...", starsPrice);
+
       const res = await apiFetch("/api/orders/stars", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user.telegramId,
-          title: "Оплата заказа",
-          description: `Покупка за ${starsPrice} Stars`,
+          title: "Order Payment",
+          description: `Purchase for ${starsPrice} Stars`,
           amount: starsPrice,
         }),
       });
-  
+
       const data = await res.json();
-      
+
       if (!data.invoice_url && !data.invoice_link) {
-        throw new Error("Не удалось создать счёт");
+        throw new Error("Failed to create invoice");
       }
 
-      console.log("✅ Invoice получен:", data);
+      console.log("✅ Invoice received:", data);
 
-      // Извлекаем slug из URL (для openInvoice)
-      // Формат: https://t.me/$botusername?start=invoice_SLUG или https://t.me/invoice/SLUG
       const invoiceUrl = data.invoice_url || data.invoice_link;
       let invoiceSlug = null;
 
-      // Пытаемся извлечь slug из разных форматов
       if (invoiceUrl.includes('/invoice/')) {
-        // Формат: https://t.me/invoice/SLUG
         invoiceSlug = invoiceUrl.split('/invoice/')[1];
       } else if (invoiceUrl.includes('start=')) {
-        // Формат: https://t.me/bot?start=SLUG
         invoiceSlug = invoiceUrl.split('start=')[1];
       }
 
       console.log("Invoice slug:", invoiceSlug);
 
       if (invoiceSlug && window.Telegram?.WebApp?.openInvoice) {
-        // ПРАВИЛЬНЫЙ метод для Stars платежей
         window.Telegram.WebApp.openInvoice(invoiceSlug, (status) => {
-          console.log("Статус оплаты:", status);
-          
+          console.log("Payment status:", status);
+
           setIsLoading(false);
-          
+
           if (status === "paid") {
-            toast.success("Оплата прошла успешно! ✅");
-            // Можете добавить логику подтверждения на сервере
+            toast.success("Payment successful! ✅");
             setTimeout(() => {
-              router.push("/success"); // или другая страница успеха
+              router.push("/success");
             }, 1500);
           } else if (status === "cancelled") {
-            toast.error("Оплата отменена");
+            toast.error("Payment cancelled");
           } else if (status === "failed") {
-            toast.error("Ошибка оплаты");
+            toast.error("Payment failed");
           } else if (status === "pending") {
-            toast("Ожидание оплаты...", { icon: "⏳" });
+            toast("Waiting for payment...", { icon: "⏳" });
           }
         });
 
-        toast("Открываем форму оплаты...", { icon: "💫" });
+        toast("Opening payment form...", { icon: "💫" });
       } else {
-        // Fallback: если не удалось извлечь slug
-        console.warn("Не удалось извлечь invoice slug, используем openTelegramLink");
+        console.warn("Failed to extract invoice slug, using fallback link");
         if (window.Telegram?.WebApp?.openTelegramLink) {
           window.Telegram.WebApp.openTelegramLink(invoiceUrl);
         } else {
@@ -125,8 +117,8 @@ function StarsPayPageContent() {
       }
 
     } catch (err) {
-      console.error("Ошибка создания счёта:", err);
-      toast.error("Ошибка при создании счёта");
+      console.error("Invoice creation error:", err);
+      toast.error("Failed to create invoice");
       setIsLoading(false);
     }
   };
@@ -148,55 +140,29 @@ function StarsPayPageContent() {
         </h1>
         <div className="w-10" />
       </div>
-  
+
       {/* Content */}
       <div className="max-w-md mx-auto p-5">
-        {/* Telegram WebApp Status */}
-        {/* <div className="mb-4 p-3 bg-gray-900 bg-opacity-50 border border-gray-700 rounded-lg">
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-3 h-3 rounded-full ${
-                isTelegramAvailable ? "bg-green-500" : "bg-red-500"
-              }`}
-            />
-            <span className="text-sm">
-              {isTelegramAvailable
-                ? "✅ Telegram WebApp активен"
-                : "⚠️ Telegram WebApp недоступен"}
-            </span>
-          </div>
-          {isTelegramAvailable && window.Telegram?.WebApp?.platform && (
-            <p className="text-xs text-gray-400 mt-1">
-              Платформа: {window.Telegram.WebApp.platform}
-            </p>
-          )}
-          {!isTelegramAvailable && (
-            <p className="text-xs text-gray-400 mt-2">
-              Откройте это приложение через Telegram для полного функционала.
-            </p>
-          )}
-        </div>
-   */}
         <div className="bg-gray-900 bg-opacity-50 border border-indigo-500 rounded-2xl p-5">
           <h2 className="text-lg font-semibold text-indigo-400 mb-3">
-            Сумма к оплате:{" "}
+            Amount to pay:{" "}
             <span className="text-white">
-              {starsPrice} ⭐ ({priceUSD}$)
+              {starsPrice} ⭐ (${priceUSD})
             </span>
           </h2>
-  
-          <ul className="space-y-2">
-            <li>💫 Оплата через Telegram Stars</li>
-            <li>💫 Нажмите кнопку "Оплатить Stars"</li>
-            <li>💫 Оплатите в открывшейся форме</li>
-            <li>💫 После оплаты вы вернетесь в приложение</li>
+
+          <ul className="space-y-2 text-sm">
+            <li>💫 Pay via Telegram Stars</li>
+            <li>💫 Click the "Pay Stars" button</li>
+            <li>💫 Complete payment in the opened form</li>
+            <li>💫 After payment, you will return to the app</li>
           </ul>
-  
+
           <p className="text-yellow-400 font-semibold mt-3 text-sm">
-            * Stars списываются из вашего Telegram кошелька
+            * Stars will be deducted from your Telegram wallet
           </p>
         </div>
-  
+
         {/* Pay Button */}
         <button
           onClick={handleTelegramPay}
@@ -210,24 +176,24 @@ function StarsPayPageContent() {
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Обработка...
+              Processing...
             </span>
           ) : (
-            "Оплатить Stars ⭐"
+            "Pay Stars ⭐"
           )}
         </button>
-  
+
         {/* Additional Info */}
         <div className="mt-5 p-4 bg-gray-800 bg-opacity-50 rounded-xl">
           <h3 className="text-sm font-semibold text-gray-300 mb-2">
-            📌 Важная информация:
+            📌 Important Information:
           </h3>
           <ul className="text-xs text-gray-400 space-y-1">
-            <li>• Минимальная сумма: 1 Star</li>
-            <li>• Оплата моментальная</li>
-            <li>• После оплаты вы останетесь в приложении</li>
-            <li>• Возврат доступен в течение 48 часов</li>
-            <li>• Поддержка: @support_bot</li>
+            <li>• Minimum amount: 1 Star</li>
+            <li>• Instant payment</li>
+            <li>• You will stay in the app after payment</li>
+            <li>• Refund available within 48 hours</li>
+            <li>• Support: @support_bot</li>
           </ul>
         </div>
       </div>
@@ -240,7 +206,7 @@ export default function StarsPayPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-gradient-to-br from-black via-indigo-900 to-black flex items-center justify-center">
-          <div className="text-white text-xl">Загрузка...</div>
+          <div className="text-white text-xl">Loading...</div>
         </div>
       }
     >

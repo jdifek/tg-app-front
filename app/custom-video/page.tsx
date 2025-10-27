@@ -64,25 +64,48 @@ export default function CustomVideoPage() {
               Select Duration:
             </h3>
             {durations.map((option) => (
-              <button
-                key={option.id}
-                onClick={() => setSelectedDuration(option)}
-                className={`w-full rounded-xl p-4 border-2 transition-all ${
-                  selectedDuration &&  selectedDuration.id === option.id
-                    ? "border-purple-800 bg-purple-400 bg-opacity-20"
-                    : "border-gray-800 bg-gray-900 bg-opacity-50 hover:border-gray-700"
+            <button
+            key={option.id}
+            onClick={() => setSelectedDuration(option)}
+            className={`w-full rounded-xl p-4 border-2 transition-all ${
+              selectedDuration && selectedDuration.id === option.id
+                ? "border-purple-800 bg-purple-400 bg-opacity-20"
+                : "border-gray-800 bg-gray-900 bg-opacity-50 hover:border-gray-700"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-left">
+                <h4
+                  className={`font-semibold text-lg ${
+                    selectedDuration && selectedDuration.id === option.id
+                      ? "text-purple-800"
+                      : "text-white"
+                  }`}
+                >
+                  {option.duration}
+                </h4>
+                <p
+                  className={`text-sm ${
+                    selectedDuration && selectedDuration.id === option.id
+                      ? "text-white"
+                      : "text-gray-400"
+                  }`}
+                >
+                  Custom video
+                </p>
+              </div>
+              <div
+                className={`text-2xl font-bold ${
+                  selectedDuration && selectedDuration.id === option.id
+                    ? "text-white"
+                    : "text-purple-400"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="text-left">
-                    <h4 className="font-semibold text-lg">{option.duration}</h4>
-                    <p className="text-sm text-gray-400">Custom video</p>
-                  </div>
-                  <div className="text-2xl font-bold text-purple-400">
-                    ${option.price}
-                  </div>
-                </div>
-              </button>
+                ${option.price}
+              </div>
+            </div>
+          </button>
+          
             ))}
           </div>
 
