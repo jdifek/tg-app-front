@@ -121,7 +121,7 @@ function PaymentPage() {
         type === "rating" ? "RATING" :
         "PRODUCT",
         items: [{ id, type, quantity: 1, price: totalPrice }],
-        paymentMethod: mapPaymentMethodToBackend(methodId), // ← форматируем тут
+        paymentMethod: mapPaymentMethodToBackend(methodId),
         shipping: shippingData,
       };
 

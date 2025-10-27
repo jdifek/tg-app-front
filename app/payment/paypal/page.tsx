@@ -122,6 +122,7 @@ export default function PayPalPage() {
       if (!response.ok) {
         throw new Error("Failed to upload photo");
       }
+      router.push("/");
 
       toast.success("Photo uploaded successfully!");
     } catch (error) {

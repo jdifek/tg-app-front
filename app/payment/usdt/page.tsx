@@ -132,7 +132,7 @@ export default function UsdtPaymentPage() {
       if (!response.ok) {
         throw new Error("Failed to upload photo");
       }
-
+      router.push("/");
       toast.success("Photo uploaded successfully!");
     } catch (error) {
       console.error("Photo upload failed:", error);
