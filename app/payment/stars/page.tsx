@@ -17,6 +17,7 @@ function StarsPayPageContent() {
   const [starsPrice, setStarsPrice] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isTelegramAvailable, setIsTelegramAvailable] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
 
   const priceUSD = searchParams.get("price")
     ? parseFloat(searchParams.get("price")!)
@@ -45,9 +46,62 @@ function StarsPayPageContent() {
     }
   }, [priceUSD]);
 
+  // Check payment status periodically after invoice is opened
+  useEffect(() => {
+    if (!orderId) return;
+
+    const checkPaymentStatus = async () => {
+      try {
+        const res = await apiFetch(`/api/orders/detail/${orderId}`);
+        const order = await res.json();
+
+        if (order.paymentStatus === "CONFIRMED") {
+          toast.success("Payment confirmed! ✅");
+          setIsLoading(false);
+          setTimeout(() => router.push("/"), 1500);
+          return true;
+        }
+        return false;
+      } catch (err) {
+        console.error("Error checking payment status:", err);
+        return false;
+      }
+    };
+
+    // Check immediately
+    checkPaymentStatus();
+
+    // Then check every 2 seconds for up to 5 minutes
+    const interval = setInterval(async () => {
+      const confirmed = await checkPaymentStatus();
+      if (confirmed) {
+        clearInterval(interval);
+      }
+    }, 2000);
+
+    // Stop checking after 5 minutes
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      setIsLoading(false);
+      toast("Payment verification timeout. Please check your orders.", {
+        icon: "⏱️",
+      });
+    }, 300000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [orderId, router]);
+
   const handleTelegramPay = async () => {
     if (!isTelegramAvailable) {
       toast.error("Telegram WebApp is not available. Open this in Telegram.");
+      return;
+    }
+
+    if (!user?.telegramId) {
+      toast.error("User not found");
       return;
     }
 
@@ -66,60 +120,74 @@ function StarsPayPageContent() {
         }),
       });
 
-      const data = await res.json();
-
-      if (!data.invoice_url && !data.invoice_link) {
-        throw new Error("Failed to create invoice");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to create invoice");
       }
 
-      console.log("✅ Invoice received:", data);
+      const data = await res.json();
 
-      const invoiceUrl = data.invoice_url || data.invoice_link;
+      if (!data.invoice_url) {
+        throw new Error("Invoice URL not received");
+      }
+
+      console.log("✅ Invoice received:", data.invoice_url);
+      console.log("📦 Order ID:", data.order_id);
+
+      // Save order ID for status checking
+      setOrderId(data.order_id);
+
+      const invoiceUrl = data.invoice_url;
       let invoiceSlug = null;
 
-      if (invoiceUrl.includes('/invoice/')) {
-        invoiceSlug = invoiceUrl.split('/invoice/')[1];
-      } else if (invoiceUrl.includes('start=')) {
-        invoiceSlug = invoiceUrl.split('start=')[1];
+      // Extract slug from different URL formats
+      if (invoiceUrl.includes("/invoice/")) {
+        invoiceSlug = invoiceUrl.split("/invoice/")[1].split("?")[0];
+      } else if (invoiceUrl.includes("start=")) {
+        const matches = invoiceUrl.match(/start=([^&]+)/);
+        if (matches) {
+          invoiceSlug = matches[1];
+        }
       }
 
       console.log("Invoice slug:", invoiceSlug);
 
       if (invoiceSlug && window.Telegram?.WebApp?.openInvoice) {
-        window.Telegram.WebApp.openInvoice(invoiceSlug, (status) => {
-          console.log("Payment status:", status);
-
-          setIsLoading(false);
-
-          if (status === "paid") {
-            toast.success("Payment successful! ✅");
-            setTimeout(() => {
-              router.push("/success");
-            }, 1500);
-          } else if (status === "cancelled") {
-            toast.error("Payment cancelled");
-          } else if (status === "failed") {
-            toast.error("Payment failed");
-          } else if (status === "pending") {
-            toast("Waiting for payment...", { icon: "⏳" });
-          }
+        // Open payment form
+        // NOTE: Telegram does NOT pass payment status to this callback
+        // We need to check payment status via webhook/polling instead
+        window.Telegram.WebApp.openInvoice(invoiceSlug, () => {
+          console.log("Payment form closed");
+          // Just show a message that we're checking payment
+          toast("Checking payment status...", { icon: "🔍" });
+          // Status checking happens in useEffect above
         });
 
         toast("Opening payment form...", { icon: "💫" });
       } else {
-        console.warn("Failed to extract invoice slug, using fallback link");
+        // Fallback: open in Telegram
+        console.warn("Using fallback link method");
         if (window.Telegram?.WebApp?.openTelegramLink) {
           window.Telegram.WebApp.openTelegramLink(invoiceUrl);
         } else {
           window.Telegram.WebApp.openLink(invoiceUrl);
         }
-        setIsLoading(false);
-      }
 
+        toast(
+          "Payment opened in Telegram. Return to check status.",
+          { icon: "💫", duration: 5000 }
+        );
+
+        // Still try to check status
+        // User will need to return to app manually
+      }
     } catch (err) {
       console.error("Invoice creation error:", err);
-      toast.error("Failed to create invoice");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create invoice"
+      );
       setIsLoading(false);
+      setOrderId(null);
     }
   };
 
@@ -135,7 +203,7 @@ function StarsPayPageContent() {
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
         <h1 className="text-xl font-bold flex items-center gap-2">
-          Stars
+          Stars Payment
           <Star className="w-5 h-5 text-yellow-400" />
         </h1>
         <div className="w-10" />
@@ -155,7 +223,7 @@ function StarsPayPageContent() {
             <li>💫 Pay via Telegram Stars</li>
             <li>💫 Click the "Pay Stars" button</li>
             <li>💫 Complete payment in the opened form</li>
-            <li>💫 After payment, you will return to the app</li>
+            <li>💫 Return here - we'll verify payment automatically</li>
           </ul>
 
           <p className="text-yellow-400 font-semibold mt-3 text-sm">
@@ -176,12 +244,25 @@ function StarsPayPageContent() {
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Processing...
+              {orderId ? "Verifying payment..." : "Processing..."}
             </span>
           ) : (
             "Pay Stars ⭐"
           )}
         </button>
+
+        {/* Payment verification info */}
+        {isLoading && orderId && (
+          <div className="mt-4 p-3 bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg">
+            <p className="text-sm text-blue-300 text-center">
+              ⏳ Waiting for payment confirmation...
+              <br />
+              <span className="text-xs text-blue-400">
+                This may take a few seconds
+              </span>
+            </p>
+          </div>
+        )}
 
         {/* Additional Info */}
         <div className="mt-5 p-4 bg-gray-800 bg-opacity-50 rounded-xl">
@@ -190,12 +271,21 @@ function StarsPayPageContent() {
           </h3>
           <ul className="text-xs text-gray-400 space-y-1">
             <li>• Minimum amount: 1 Star</li>
-            <li>• Instant payment</li>
-            <li>• You will stay in the app after payment</li>
+            <li>• Payment verified automatically</li>
+            <li>• Stay in the app after payment</li>
             <li>• Refund available within 48 hours</li>
             <li>• Support: @support_bot</li>
           </ul>
         </div>
+
+        {!isTelegramAvailable && (
+          <div className="mt-4 p-3 bg-red-900 bg-opacity-30 border border-red-500 rounded-lg">
+            <p className="text-sm text-red-300">
+              ⚠️ Telegram WebApp not detected. Please open this app through
+              Telegram.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
