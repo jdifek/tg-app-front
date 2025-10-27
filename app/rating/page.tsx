@@ -102,9 +102,7 @@ export default function RatingPage() {
                   <p className="text-white text-opacity-90 text-sm">
                     {type.description}
                   </p>
-                  <button className="w-full mt-4 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    Order Now
-                  </button>
+               
                 </div>
               );
             })}
