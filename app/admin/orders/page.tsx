@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   Star,
   Send,
+  MessageCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/app/http";

@@ -1,4 +1,5 @@
 //@ts-nocheck
+"use client"
 import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
@@ -11,6 +12,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { apiFetch } from "@/app/http";
 
 export default function AdminSupportPage() {
   const [chats, setChats] = useState([]);
@@ -72,7 +74,7 @@ export default function AdminSupportPage() {
 
   const fetchChats = async () => {
     try {
-      const response = await fetch("/api/support/chats");
+      const response = await apiFetch("/api/support/chats");
       const data = await response.json();
       setChats(data);
 
@@ -87,7 +89,7 @@ export default function AdminSupportPage() {
 
   const fetchMessages = async (userId) => {
     try {
-      const response = await fetch(`/api/support/messages/${userId}`);
+      const response = await apiFetch(`/api/support/messages/${userId}`);
       const data = await response.json();
       setMessages(data);
     } catch (error) {
@@ -119,7 +121,7 @@ export default function AdminSupportPage() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch("/api/upload", {
+    const response = await apiFetch("/api//upload", {
       method: "POST",
       body: formData,
     });
@@ -149,7 +151,7 @@ export default function AdminSupportPage() {
         mediaType = getMediaType(mediaFile);
       }
 
-      const response = await fetch("/api/support/send", {
+      const response = await apiFetch("/api/support/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
