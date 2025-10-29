@@ -103,12 +103,18 @@ export default function BundlePage({ params }: { params: BundlePageParams }) {
                 What's included:
               </h3>
               <div className="space-y-2">
-                {bundle.photos && (
-                  <p className="text-gray-300">📸 {bundle.photos} Photos</p>
-                )}
-                {bundle.videos && (
-                  <p className="text-gray-300">🎥 {bundle.videos} Videos</p>
-                )}
+              {bundle.images?.length > 0 && (
+                      <p className="text-gray-400 text-xs mt-1">
+                        📸 {bundle.videos.length} photo
+                        {bundle.videos.length > 1 ? "s" : ""}
+                      </p>
+                    )}
+                {bundle.videos?.length > 0 && (
+                      <p className="text-gray-400 text-xs mt-1">
+                        🎥 {bundle.videos.length} video
+                        {bundle.videos.length > 1 ? "s" : ""}
+                      </p>
+                    )}
                 {bundle.exclusive && (
                   <p className="text-purple-400">⭐ Exclusive Content</p>
                 )}

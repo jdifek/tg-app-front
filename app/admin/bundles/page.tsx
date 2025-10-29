@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Plus, Edit, Trash2, Save, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/app/http";
+import toast from "react-hot-toast";
 
 export default function AdminBundlesPage() {
   const router = useRouter();
@@ -14,11 +15,15 @@ export default function AdminBundlesPage() {
     name: "",
     description: "",
     price: "",
-    photos: "",
-    videos: "",
     exclusive: false,
     imageFile: null,
     image: "",
+    imageFiles: [],
+    videoFiles: [],
+    existingImages: [], // существующие фото
+    existingVideos: [], // существующие видео
+    imagesToDelete: [], // ID фото для удаления
+    videosToDelete: [], // ID видео для удаления
   });
 
   useEffect(() => {
@@ -43,11 +48,15 @@ export default function AdminBundlesPage() {
       name: bundle.name,
       description: bundle.description || "",
       price: bundle.price.toString(),
-      photos: bundle.photos?.toString() || "",
-      videos: bundle.videos?.toString() || "",
       exclusive: !!bundle.exclusive,
       image: bundle.image || "",
       imageFile: null,
+      imageFiles: [],
+      videoFiles: [],
+      existingImages: bundle.images || [],
+      existingVideos: bundle.videos || [],
+      imagesToDelete: [],
+      videosToDelete: [],
     });
   };
 
@@ -57,40 +66,74 @@ export default function AdminBundlesPage() {
       name: "",
       description: "",
       price: "",
-      photos: "",
-      videos: "",
       exclusive: false,
       image: "",
       imageFile: null,
+      imageFiles: [],
+      videoFiles: [],
+      existingImages: [],
+      existingVideos: [],
+      imagesToDelete: [],
+      videosToDelete: [],
     });
   };
 
   const handleSave = async () => {
     try {
       const isNew = editing === "new";
-      const url = isNew ? "/api/admin/bundles" : `/api/admin/bundles/${editing}`;
+      const url = isNew
+        ? "/api/admin/bundles"
+        : `/api/admin/bundles/${editing}`;
       const method = isNew ? "POST" : "PUT";
 
       const fd = new FormData();
-      fd.append("name", formData.name);
-      fd.append("description", formData.description);
-      fd.append("price", formData.price);
-      fd.append("photos", formData.photos);
-      fd.append("videos", formData.videos);
+      fd.append("name", formData.name || "");
+      fd.append("description", formData.description || "");
+      fd.append("price", formData.price || "");
       fd.append("exclusive", formData.exclusive ? "true" : "false");
+
+      // Add image if it exists
       if (formData.imageFile) fd.append("image", formData.imageFile);
 
+      // Add additional images if provided
+      if (formData.imageFiles?.length) {
+        formData.imageFiles.forEach((file) => fd.append("images", file));
+      }
+
+      // Add videos if provided
+      if (formData.videoFiles?.length) {
+        formData.videoFiles.forEach((file) => fd.append("videos", file));
+      }
+
+      // Add IDs to delete
+      if (formData.imagesToDelete?.length) {
+        fd.append("imagesToDelete", JSON.stringify(formData.imagesToDelete));
+      }
+      if (formData.videosToDelete?.length) {
+        fd.append("videosToDelete", JSON.stringify(formData.videosToDelete));
+      }
+
+      const loadingToast = toast.loading(
+        isNew ? "Creating bundle..." : "Saving changes..."
+      );
+
       const response = await apiFetch(url, { method, body: fd });
+
+      toast.dismiss(loadingToast);
 
       if (response.ok) {
         await fetchBundles();
         handleCancel();
+        toast.success(
+          isNew ? "Bundle created successfully!" : "Changes saved!"
+        );
       } else {
-        throw new Error("Failed to save bundle");
+        toast.error("Failed to save bundle 😞");
       }
     } catch (error) {
       console.error("Error saving bundle:", error);
-      alert("Failed to save bundle. Please try again.");
+      toast.dismiss();
+      toast.error("An error occurred while saving. Please try again.");
     }
   };
 
@@ -127,8 +170,36 @@ export default function AdminBundlesPage() {
     }
   };
 
+  const removeExistingImage = (imageId) => {
+    setFormData({
+      ...formData,
+      existingImages: formData.existingImages.filter(img => img.id !== imageId),
+      imagesToDelete: [...formData.imagesToDelete, imageId],
+    });
+  };
+
+  const removeExistingVideo = (videoId) => {
+    setFormData({
+      ...formData,
+      existingVideos: formData.existingVideos.filter(vid => vid.id !== videoId),
+      videosToDelete: [...formData.videosToDelete, videoId],
+    });
+  };
+
+  const removeNewImage = (index) => {
+    const newFiles = [...formData.imageFiles];
+    newFiles.splice(index, 1);
+    setFormData({ ...formData, imageFiles: newFiles });
+  };
+
+  const removeNewVideo = (index) => {
+    const newFiles = [...formData.videoFiles];
+    newFiles.splice(index, 1);
+    setFormData({ ...formData, videoFiles: newFiles });
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
+    <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black text-white">
       <div className="max-w-6xl mx-auto p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -167,7 +238,9 @@ export default function AdminBundlesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Price ($)</label>
+                <label className="block text-sm font-medium mb-2">
+                  Price ($)
+                </label>
                 <input
                   type="number"
                   name="price"
@@ -178,7 +251,9 @@ export default function AdminBundlesPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-sm font-medium mb-2">
+                  Description
+                </label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -187,26 +262,7 @@ export default function AdminBundlesPage() {
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Photos</label>
-                <input
-                  type="number"
-                  name="photos"
-                  value={formData.photos}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Videos</label>
-                <input
-                  type="number"
-                  name="videos"
-                  value={formData.videos}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                />
-              </div>
+           
               <div className="md:col-span-2 flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -217,8 +273,10 @@ export default function AdminBundlesPage() {
                 />
                 <label className="text-sm font-medium">Exclusive Content</label>
               </div>
+
+              {/* Main Image */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Image</label>
+                <label className="block text-sm font-medium mb-2">Main Image</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -239,6 +297,150 @@ export default function AdminBundlesPage() {
                     className="mt-2 w-32 h-32 object-cover rounded-lg"
                   />
                 )}
+              </div>
+
+              {/* Additional Images */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">
+                  Additional Images
+                </label>
+                
+                {/* Existing Images */}
+                {formData.existingImages.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-400 mb-2">Current Images:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.existingImages.map((img) => (
+                        <div key={img.id} className="relative group">
+                          <img
+                            src={img.url}
+                            alt="existing"
+                            className="w-24 h-24 object-cover rounded-lg border border-gray-700"
+                          />
+                          <button
+                            onClick={() => removeExistingImage(img.id)}
+                            className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Images Upload */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      imageFiles: Array.from(e.target.files),
+                    })
+                  }
+                  className="w-full text-gray-300"
+                />
+                
+                {/* New Images Preview */}
+                {formData.imageFiles && formData.imageFiles.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-400 mb-2">New Images:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.imageFiles.map((file, i) => (
+                        <div key={i} className="relative group">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`preview-${i}`}
+                            className="w-24 h-24 object-cover rounded-lg border border-green-500"
+                          />
+                          <button
+                            onClick={() => removeNewImage(i)}
+                            className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Videos */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">Videos</label>
+                
+                {/* Existing Videos */}
+                {formData.existingVideos.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-400 mb-2">Current Videos:</p>
+                    <div className="space-y-2">
+                      {formData.existingVideos.map((video) => (
+                        <div
+                          key={video.id}
+                          className="flex items-center justify-between bg-gray-800 rounded-lg p-3 border border-gray-700"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <span className="text-2xl">🎥</span>
+                            <span className="text-sm">{video.name}</span>
+                          </div>
+                          <button
+                            onClick={() => removeExistingVideo(video.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white rounded-full p-1 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Videos Upload */}
+                <input
+                  type="file"
+                  accept="video/*"
+                  multiple
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      videoFiles: Array.from(e.target.files),
+                    })
+                  }
+                  className="w-full text-gray-300"
+                />
+                
+                {/* New Videos Preview */}
+                {Array.isArray(formData.videoFiles) &&
+                  formData.videoFiles.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs text-gray-400 mb-2">New Videos:</p>
+                      <div className="space-y-2">
+                        {formData.videoFiles.map((file, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between bg-gray-800 rounded-lg p-3 border border-green-500"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <span className="text-2xl">🎥</span>
+                              <span className="text-sm">{file.name}</span>
+                              <span className="text-xs text-gray-500">
+                                ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => removeNewVideo(i)}
+                              className="bg-red-600 hover:bg-red-700 text-white rounded-full p-1 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -305,9 +507,35 @@ export default function AdminBundlesPage() {
                       {bundle.description}
                     </p>
                     <p className="text-gray-300 text-sm">
-                      📸 {bundle.photos || 0} | 🎥 {bundle.videos || 0}{" "}
+                      📸 {bundle.images?.length || 0} | 🎥{" "}
+                      {bundle.videos?.length || 0}{" "}
                       {bundle.exclusive ? "| ⭐ Exclusive" : ""}
                     </p>
+
+                    {bundle.images?.length > 0 && (
+                      <div className="flex gap-1 mt-2">
+                        {bundle.images.slice(0, 3).map((img) => (
+                          <img
+                            key={img.id}
+                            src={img.url}
+                            alt=""
+                            className="w-10 h-10 rounded object-cover border border-gray-700"
+                          />
+                        ))}
+                        {bundle.images.length > 3 && (
+                          <span className="text-gray-400 text-xs self-center ml-1">
+                            +{bundle.images.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {bundle.videos?.length > 0 && (
+                      <p className="text-gray-400 text-xs mt-1">
+                        🎥 {bundle.videos.length} video
+                        {bundle.videos.length > 1 ? "s" : ""}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex space-x-2">

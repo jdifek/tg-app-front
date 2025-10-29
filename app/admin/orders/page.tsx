@@ -70,21 +70,23 @@ export default function AdminOrdersPage() {
       alert("Please enter a message");
       return;
     }
-
+  
     setSendingMessage({ ...sendingMessage, [orderId]: true });
-
+  
     try {
-      const response = await apiFetch("/api/admin/send-message", {
+      // Используем новую систему поддержки
+      const response = await apiFetch("/api/support/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userId: userId,
-          message: message,
+          message: `📦 <b>Message about Order #${orderId.slice(0, 8)}</b>\n\n${message}`,
+          orderId: orderId, // Опционально: можем сохранить связь с заказом
         }),
       });
-
+  
       if (response.ok) {
         toast.success("Message sent successfully!");
         setCustomMessage({ ...customMessage, [orderId]: "" });
@@ -98,6 +100,7 @@ export default function AdminOrdersPage() {
       setSendingMessage({ ...sendingMessage, [orderId]: false });
     }
   };
+  
   const updatePaymentStatus = async (orderId, newPaymentStatus) => {
     try {
       const response = await apiFetch(`/api/orders/${orderId}/payment-status`, {
@@ -126,30 +129,31 @@ export default function AdminOrdersPage() {
       alert("Please enter feedback message");
       return;
     }
-
+  
     setSendingFeedback({ ...sendingFeedback, [orderId]: true });
-
+  
     try {
-      const response = await apiFetch("/api/admin/send-feedback", {
+      // Используем новую систему поддержки
+      const response = await apiFetch("/api/support/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userId: userId,
-          orderId: orderId,
-          message: feedback,
+          message: `⭐ <b>Dick Rating Feedback for Order #${orderId.slice(0, 8)}</b>\n\n${feedback}`,
         }),
       });
-
+  
       if (response.ok) {
-        alert("Feedback sent successfully!");
+        toast.success("Feedback sent successfully!");
         setRatingFeedback({ ...ratingFeedback, [orderId]: "" });
       } else {
         throw new Error("Failed to send feedback");
       }
     } catch (error) {
       console.error("Error sending feedback:", error);
+      toast.error("Failed to send feedback");
     } finally {
       setSendingFeedback({ ...sendingFeedback, [orderId]: false });
     }
@@ -532,6 +536,15 @@ export default function AdminOrdersPage() {
                     )}
                   </button>
                 </div>
+                <div className="mt-2">
+  <button
+    onClick={() => window.open(`/admin/support?user=${order.telegramId}`, '_blank')}
+    className="w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+  >
+    <MessageCircle className="w-4 h-4" />
+    <span>Open Full Chat with User</span>
+  </button>
+</div>
                 {/* Payment Status Section */}
                 {order.paymentStatus && order.paymentStatus !== "CONFIRMED" && (
                   <div className="mb-3 p-3 bg-gray-800 bg-opacity-50 rounded-lg border-l-4 border-orange-500">
