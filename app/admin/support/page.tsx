@@ -121,7 +121,7 @@ export default function AdminSupportPage() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await apiFetch("/api//upload", {
+    const response = await apiFetch("/api/upload", {
       method: "POST",
       body: formData,
     });
