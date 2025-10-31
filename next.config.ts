@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**', // ✅ Разрешает все домены
       },
+      {
+        protocol: 'https',
+        hostname: 'tg-app-back-production.up.railway.app',
+        port: '',
+        pathname: '/uploads/**',
+      },
     ],
   },
   typescript: {
