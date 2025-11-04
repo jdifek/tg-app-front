@@ -15,6 +15,7 @@ export enum PaymentMethod {
   CARD_CRYPTO = "card", // Tribute (Card/Crypto)
   USDT_TRC20 = "usdt", // Оплата в USDT (TRC20)
   PAYPAL = "paypal", // PayPal
+  DONATION = "donation", // DONATION
   STARS = "stars", // Telegram Stars
   MANUAL = "MANUAL", // Ручная оплата
 }
@@ -41,6 +42,7 @@ function PaymentPage() {
   const type = searchParams.get("type"); // "product" или "bundle"
   const id = searchParams.get("id"); // id товара или бандла
   const priceParam = searchParams.get("price");
+  const message = searchParams.get("message");
   const totalPrice = priceParam ? parseFloat(priceParam) : 0;
   const shippingParam = searchParams.get("shipping");
   const shippingData = shippingParam ? JSON.parse(shippingParam) : {};
@@ -50,6 +52,8 @@ function PaymentPage() {
         return "CARD_CRYPTO";
       case PaymentMethod.USDT_TRC20:
         return "USDT_TRC20";
+      case PaymentMethod.DONATION:
+        return "DONATION";
       case PaymentMethod.PAYPAL:
         return "PAYPAL";
       case PaymentMethod.STARS:
@@ -61,6 +65,16 @@ function PaymentPage() {
     }
   };
   useEffect(() => {
+    if (type === "donation") {
+      setOrder({
+        id: null, // или можно сгенерировать временный id
+        total: totalPrice,
+        items: [{ name: "Donation", price: totalPrice }],
+      });
+      setLoading(false);
+      return;
+    }
+
     if (id) {
       setOrder({
         id: id,
@@ -69,7 +83,7 @@ function PaymentPage() {
       });
       setLoading(false);
     }
-  }, [id, totalPrice]);
+  }, [id, totalPrice, type]);
 
   const paymentMethods = [
     {
@@ -103,26 +117,45 @@ function PaymentPage() {
   ];
 
   const handlePayment = async (methodId: PaymentMethod) => {
-    if (!id || !type) return alert("Invalid order parameters");
+    if (type !== "donation" && (!id || !type)) {
+      return alert("Invalid order parameters");
+    }
 
     setSelectedMethod(methodId);
-   
+
     try {
       const orderData = {
         userId: user.id,
         telegramId: user.telegramId,
         firstName: user.first_name,
         username: user.username,
-        orderType: type === "product" ? "PRODUCT" :
-        type === "bundle" ? "BUNDLE" :
-        type === "vip" ? "VIP" :
-        type === "custom_video" ? "CUSTOM_VIDEO" :
-        type === "video_call" ? "VIDEO_CALL" :
-        type === "rating" ? "RATING" :
-        "PRODUCT",
-        items: [{ id, type, quantity: 1, price: totalPrice }],
+        orderType:
+          type === "product"
+            ? "PRODUCT"
+            : type === "bundle"
+            ? "BUNDLE"
+            : type === "vip"
+            ? "VIP"
+            : type === "custom_video"
+            ? "CUSTOM_VIDEO"
+            : type === "video_call"
+            ? "VIDEO_CALL"
+            : type === "rating"
+            ? "RATING"
+            : type === "donation"
+            ? "DONATION"
+            : "PRODUCT",
+        items: [
+          {
+            id: type === "donation" ? "DONATION" : id,
+            type,
+            quantity: 1,
+            price: totalPrice,
+          },
+        ],
         paymentMethod: mapPaymentMethodToBackend(methodId),
         shipping: shippingData,
+        donationMessage: message,
       };
 
       const response = await apiFetch("/api/orders", {
@@ -143,7 +176,6 @@ function PaymentPage() {
           `/payment/${methodId}?orderId=${paymentResult.id}&price=${totalPrice}&rating=true`
         );
       } else {
-
         router.push(
           `/payment/${methodId}?orderId=${paymentResult.id}&price=${totalPrice}`
         );
@@ -168,7 +200,6 @@ function PaymentPage() {
       </div>
     );
   }
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">

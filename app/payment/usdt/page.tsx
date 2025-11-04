@@ -17,10 +17,27 @@ export default function UsdtPaymentPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const address = "TQx9vF3s1GJH2A7xXp6f5rN8W4tK9mE8nP3";
+  const [address, setAddress] = useState("loading");
+
   const [orderId, setOrderId] = useState<string | null>(null);
   const [rating, setRating] = useState<string | null>(null);
-  
+
+  useEffect(() => {
+    async function fetchPayments() {
+      const res = await apiFetch("/api/orders/payments", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAddress(data.payments.USDT);
+      }
+      console.log(data, data);
+    }
+    fetchPayments();
+  }, []);
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -83,7 +100,6 @@ export default function UsdtPaymentPage() {
       if (rating) {
         setShowPhotoUpload(true);
       } else {
-
         router.push("/");
       }
     } catch (err) {
@@ -122,13 +138,11 @@ export default function UsdtPaymentPage() {
       const formData = new FormData();
       formData.append("rating", selectedPhoto);
 
-
       const response = await apiFetch(`/api/orders/${orderId}-rating`, {
         method: "PATCH",
         body: formData,
       });
 
-    
       if (!response.ok) {
         throw new Error("Failed to upload photo");
       }
@@ -226,8 +240,6 @@ export default function UsdtPaymentPage() {
                     "Submit Photo"
                   )}
                 </button>
-
-             
               </div>
             </div>
           </div>

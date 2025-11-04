@@ -16,7 +16,6 @@ export default function AdminWishlistPage() {
     description: "",
     price: "",
     image: "",
-    link: "",
   });
 
   useEffect(() => {
@@ -42,7 +41,6 @@ export default function AdminWishlistPage() {
       description: item.description || "",
       price: item.price?.toString() || "",
       image: item.image || "",
-      link: item.link || "",
     });
   };
 
@@ -53,18 +51,19 @@ export default function AdminWishlistPage() {
       description: "",
       price: "",
       image: "",
-      link: "",
     });
   };
 
   const handleSave = async () => {
     try {
-      const url = editing
-        ? `/api/admin/wishlist/${editing}`
+      const isEditing = editing && editing !== "new";
+  
+      const url = isEditing
+        ? `/api/wishlist/${editing}`
         : "/api/admin/wishlist";
-
-      const method = editing ? "PUT" : "POST";
-
+  
+      const method = isEditing ? "PATCH" : "POST";
+  
       const response = await apiFetch(url, {
         method,
         headers: {
@@ -75,7 +74,7 @@ export default function AdminWishlistPage() {
           price: formData.price ? parseFloat(formData.price) : null,
         }),
       });
-
+  
       if (response.ok) {
         await fetchItems();
         handleCancel();
@@ -87,6 +86,7 @@ export default function AdminWishlistPage() {
       alert("Failed to save item. Please try again.");
     }
   };
+  
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this item?")) return;
@@ -181,19 +181,7 @@ export default function AdminWishlistPage() {
                   placeholder="https://..."
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Link - Optional
-                </label>
-                <input
-                  type="text"
-                  name="link"
-                  value={formData.link}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                  placeholder="https://..."
-                />
-              </div>
+             
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">
                   Description

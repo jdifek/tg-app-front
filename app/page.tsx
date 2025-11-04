@@ -1,5 +1,6 @@
 import Header from './components/Header'
 import Navigation from './components/Navigation'
+import WishList from './components/WishList'
 
 export default function Home() {
   return (
@@ -7,6 +8,8 @@ export default function Home() {
       <div className="max-w-md mx-auto relative">
         <Header />
         <Navigation />
+        <WishList />
+
       </div>
     </div>
   )

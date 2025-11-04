@@ -19,7 +19,8 @@ export default function PayPalPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [rating, setRating] = useState<string | null>(null);
-  
+  const [address, setAddress] = useState("loading");
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -34,6 +35,23 @@ export default function PayPalPage() {
       setPreview(URL.createObjectURL(file));
     }
   };
+
+  useEffect(() => {
+    async function fetchPayments() {
+      const res = await apiFetch("/api/orders/payments", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAddress(data.payments.USDT);
+      }
+      console.log(data, data);
+    }
+    fetchPayments();
+  }, []);
 
   const handleConfirmPayment = async () => {
     if (!orderId) {
@@ -251,7 +269,7 @@ export default function PayPalPage() {
 
           <ul className="space-y-2 text-sm leading-relaxed">
             <li>💖 Go to PayPal and select transfer by username:</li>
-            <li className="text-pink-400 font-semibold">@TashaMendi</li>
+            <li className="text-pink-400 font-semibold">{address}</li>
             <li>💖 Transfer type: <b>Friends & Family</b></li>
             <li>
               💖 In the comment, include one of the words:
