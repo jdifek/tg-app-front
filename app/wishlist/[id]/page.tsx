@@ -102,7 +102,7 @@ export default function WishlistDetailPage() {
 
       {/* Donation Block */}
       <div className="w-full max-w-md mt-6">
-        <h2 className="text-lg font-semibold mb-4">Сумма доната</h2>
+        <h2 className="text-lg font-semibold mb-4">Donation amount</h2>
 
         {/* Buttons */}
         <div className="flex flex-wrap justify-center gap-3 mb-4">
@@ -130,7 +130,7 @@ export default function WishlistDetailPage() {
               isCustom ? "bg-pink-500 text-white" : "border-pink-400 text-pink-400 hover:bg-pink-500 hover:text-white"
             } transition`}
           >
-            Другая сумма
+           Another amount
           </button>
         </div>
 
@@ -138,7 +138,7 @@ export default function WishlistDetailPage() {
         {isCustom && (
           <input
             type="number"
-            placeholder="Введите сумму (€)"
+            placeholder="Enter amount (€)"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className="w-full p-3 mb-3 bg-purple-900/40 border border-pink-400 rounded-xl text-white placeholder-gray-300 outline-none"
@@ -149,7 +149,7 @@ export default function WishlistDetailPage() {
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Сообщение..."
+          placeholder="Message..."
           className="w-full h-28 p-3 bg-purple-900/40 border border-pink-400 rounded-xl text-white placeholder-gray-300 mb-3 outline-none resize-none"
         />
       </div>

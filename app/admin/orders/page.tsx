@@ -83,7 +83,7 @@ export default function AdminOrdersPage() {
         },
         body: JSON.stringify({
           userId: userId,
-          message: `📦 <b>Message about Order #${orderId.slice(0, 8)}</b>\n\n${message}`,
+          message: `${message}`,
           orderId: orderId, // Опционально: можем сохранить связь с заказом
         }),
       });
@@ -142,7 +142,7 @@ export default function AdminOrdersPage() {
         },
         body: JSON.stringify({
           userId: userId,
-          message: `⭐ <b>Dick Rating Feedback for Order #${orderId.slice(0, 8)}</b>\n\n${feedback}`,
+          message: `${feedback}`,
         }),
       });
   

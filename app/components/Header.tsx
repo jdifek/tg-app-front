@@ -1,24 +1,69 @@
 "use client";
-import { MessageCircle, Link as LinkIcon } from "lucide-react";
+
+import { useEffect, useState } from "react";
+import { MessageCircle, Link as LinkIcon, Copy } from "lucide-react";
 import Image from "next/image";
+import { apiFetch } from "../http";
+
+interface GirlData {
+  banner: string;
+  logo: string;
+  tgLink: string;
+}
 
 export default function Header() {
+  const [girl, setGirl] = useState<GirlData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    async function fetchGirl() {
+      try {
+        const res = await apiFetch("/api/girl", { method: "GET" });
+        const data = await res.json();
+        if (res.ok) {
+          setGirl(data.girl);
+        } else {
+          console.error("Failed to fetch girl:", data.error);
+        }
+      } catch (err) {
+        console.error("Network error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchGirl();
+  }, []);
+
   const handleSocialClick = () => {
-    // Здесь будет логика для открытия социальных сетей
-    console.log("Social clicked");
+    if (girl?.tgLink) {
+      window.open(`https://t.me/${girl.tgLink.replace(/^@/, "")}`, "_blank");
+    } else {
+      console.log("No Telegram link available");
+    }
   };
 
-  const handleMessageClick = () => {
-    // Здесь будет логика для открытия чата с ботом
-    console.log("Message clicked");
+  const handleMessageClick = async () => {
+    if (girl?.tgLink) {
+      try {
+        await navigator.clipboard.writeText(girl.tgLink);
+        setToast("Telegram link copied ✅");
+        setTimeout(() => setToast(""), 2000);
+      } catch (err) {
+        console.error("Failed to copy:", err);
+      }
+    }
   };
 
   return (
     <div className="relative">
       {/* Баннер */}
-      <div className="h-32  relative overflow-hidden">
+      <div className="h-32 relative overflow-hidden">
         <Image
-          src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1200"
+          src={
+            girl?.banner ||
+            "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1200"
+          }
           alt="Profile Banner"
           width={1200}
           height={300}
@@ -34,7 +79,10 @@ export default function Header() {
             <div className="relative">
               <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-1">
                 <Image
-                  src="https://img.freepik.com/free-photo/attractive-positive-elegant-young-woman-cafe_23-2148071691.jpg?semt=ais_hybrid&w=740&q=80"
+                  src={
+                    girl?.logo ||
+                    "https://img.freepik.com/free-photo/attractive-positive-elegant-young-woman-cafe_23-2148071691.jpg?semt=ais_hybrid&w=740&q=80"
+                  }
                   alt="Profile"
                   width={80}
                   height={80}
@@ -62,20 +110,29 @@ export default function Header() {
           {/* Кнопки действий */}
           <div className="flex space-x-2 mt-2">
             <button
-              onClick={handleSocialClick}
+              onClick={handleMessageClick}
               className="bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-lg p-2 hover:bg-white hover:bg-opacity-20 transition-colors"
+              title="Open Telegram"
             >
               <LinkIcon className="w-5 h-5 text-purple-400" />
             </button>
             <button
-              onClick={handleMessageClick}
+              onClick={handleSocialClick}
               className="bg-purple-600 hover:bg-purple-700 rounded-lg p-2 transition-colors"
+              title="Copy Telegram link"
             >
               <MessageCircle className="w-5 h-5 text-white" />
             </button>
           </div>
         </div>
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-4 right-4 bg-black bg-opacity-80 text-white px-4 py-2 rounded shadow-lg transition-opacity">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

@@ -33,17 +33,16 @@ export default function AdminWishlistPage() {
       setLoading(false);
     }
   };
-
   const handleEdit = (item) => {
     setEditing(item.id);
     setFormData({
       name: item.name,
       description: item.description || "",
       price: item.price?.toString() || "",
-      image: item.image || "",
+      image: null, // убираем ссылку, файл загружается заново при необходимости
     });
   };
-
+  
   const handleCancel = () => {
     setEditing(null);
     setFormData({
@@ -57,22 +56,23 @@ export default function AdminWishlistPage() {
   const handleSave = async () => {
     try {
       const isEditing = editing && editing !== "new";
-  
       const url = isEditing
         ? `/api/wishlist/${editing}`
-        : "/api/admin/wishlist";
+        : "/api/wishlist";
   
       const method = isEditing ? "PATCH" : "POST";
   
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("price", formData.price || "");
+      if (formData.image instanceof File) {
+        formDataToSend.append("image", formData.image);
+      }
+  
       const response = await apiFetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: formData.price ? parseFloat(formData.price) : null,
-        }),
+        body: formDataToSend,
       });
   
       if (response.ok) {
@@ -108,11 +108,14 @@ export default function AdminWishlistPage() {
   };
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value, files } = e.target;
+    if (name === "image" && files?.[0]) {
+      setFormData({ ...formData, image: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
@@ -169,19 +172,20 @@ export default function AdminWishlistPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Image URL
-                </label>
-                <input
-                  type="text"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-                  placeholder="https://..."
-                />
-              </div>
-             
+  <label className="block text-sm font-medium mb-2">
+    Image File
+  </label>
+  <input
+    type="file"
+    name="image"
+    accept="image/*"
+    onChange={(e) =>
+      setFormData({ ...formData, image: e.target.files[0] })
+    }
+    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
+  />
+</div>
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">
                   Description

@@ -12,12 +12,14 @@ export const dynamic = "force-dynamic";
 function StarsPayPageContent() {
   const router = useRouter();
   const { user } = useUser();
+  
 
   const searchParams = useSearchParams();
   const [starsPrice, setStarsPrice] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isTelegramAvailable, setIsTelegramAvailable] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const type = searchParams.get("type"); // "product" или "bundle"
 
   const priceUSD = searchParams.get("price")
     ? parseFloat(searchParams.get("price")!)
@@ -147,6 +149,22 @@ function StarsPayPageContent() {
           title: "Order Payment",
           description: `Purchase for ${starsPrice} Stars`,
           amount: starsPrice,
+          orderType:
+          type === "product"
+            ? "PRODUCT"
+            : type === "bundle"
+            ? "BUNDLE"
+            : type === "vip"
+            ? "VIP"
+            : type === "custom_video"
+            ? "CUSTOM_VIDEO"
+            : type === "video_call"
+            ? "VIDEO_CALL"
+            : type === "rating"
+            ? "RATING"
+            : type === "donation"
+            ? "DONATION"
+            : "PRODUCT",
         }),
       });
 
@@ -297,7 +315,6 @@ function StarsPayPageContent() {
             <li>• Payment verified automatically</li>
             <li>• Stay in the app after payment</li>
             <li>• Refund available within 48 hours</li>
-            <li>• Support: @support_bot</li>
           </ul>
         </div>
 
