@@ -539,7 +539,7 @@ export default function AdminOrdersPage() {
                 </div>
                 <div className="mt-2">
   <button
-    onClick={() => window.open(`/admin/support?user=${order.telegramId}`, '_blank')}
+    onClick={() => router.push(`/admin/support?user=${order.telegramId}`, '_blank')}
     className="w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
   >
     <MessageCircle className="w-4 h-4" />
