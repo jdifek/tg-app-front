@@ -93,7 +93,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }
 }
 
-
+//test
     // Фолбек: хардкод
     const hardcodedUser = {
       id: "5969166369",

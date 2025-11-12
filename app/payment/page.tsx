@@ -115,6 +115,7 @@ function PaymentPage() {
       color: "from-yellow-500 to-orange-600",
     },
   ];
+  
 
   const handlePayment = async (methodId: PaymentMethod) => {
     if (type !== "donation" && (!id || !type)) {

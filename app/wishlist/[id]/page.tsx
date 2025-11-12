@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { apiFetch } from "../../http";
 import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 export default function WishlistDetailPage() {
   const { id } = useParams();
@@ -34,10 +35,15 @@ export default function WishlistDetailPage() {
   };
 
   const handleBuy = () => {
-    if (!amount) return alert("Please enter a valid amount.");
+    if (!amount || Number(amount) <= 0) return alert("Please enter a valid amount.");
 
-    const cleanedAmount = typeof amount === "string" ? amount.replace("€", "") : amount;
-    router.push(`/payment?type=donation&price=${cleanedAmount}${message && '&message=' + message}`);
+    const cleanedAmount =
+      typeof amount === "string" ? amount.replace("$", "") : amount;
+    router.push(
+      `/payment?type=donation&price=${cleanedAmount}${
+        message && "&message=" + message
+      }`
+    );
   };
 
   if (loading) {
@@ -57,8 +63,18 @@ export default function WishlistDetailPage() {
   }
 
   return (
-    <div className="px-4 mt-8 pb-10 flex flex-col items-center text-center">
+    <div className="px-4 mt-8 pb-10 flex flex-col bg-black items-center text-center">
       {/* Image */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-800">
+        <button
+          onClick={() => router.back()}
+          className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+        >
+          <ArrowLeft className="w-6 h-6 text-white" color="white" />
+        </button>
+        <h1 className="text-xl font-bold">Back</h1>
+        <div className="w-10" />
+      </div>
       <div className="w-full max-w-xs aspect-square bg-gray-800 rounded-xl overflow-hidden mb-4">
         <Image
           src={item.image || "/api/placeholder/200/200"}
@@ -106,7 +122,7 @@ export default function WishlistDetailPage() {
 
         {/* Buttons */}
         <div className="flex flex-wrap justify-center gap-3 mb-4">
-          {["5€", "10€", "25€", "50€"].map((preset) => (
+          {["5$", "10$", "25$", "50$"].map((preset) => (
             <button
               onClick={() => {
                 setAmount(preset);
@@ -114,7 +130,9 @@ export default function WishlistDetailPage() {
               }}
               key={preset}
               className={`px-4 py-2 rounded-full border ${
-                amount === preset && !isCustom ? "bg-pink-500 text-white" : "border-pink-400 text-pink-400 hover:bg-pink-500 hover:text-white"
+                amount === preset && !isCustom
+                  ? "bg-pink-500 text-white"
+                  : "border-pink-400 text-pink-400 hover:bg-pink-500 hover:text-white"
               } transition`}
             >
               {preset}
@@ -127,10 +145,12 @@ export default function WishlistDetailPage() {
               setAmount("");
             }}
             className={`px-4 py-2 rounded-full border ${
-              isCustom ? "bg-pink-500 text-white" : "border-pink-400 text-pink-400 hover:bg-pink-500 hover:text-white"
+              isCustom
+                ? "bg-pink-500 text-white"
+                : "border-pink-400 text-pink-400 hover:bg-pink-500 hover:text-white"
             } transition`}
           >
-           Another amount
+            Another amount
           </button>
         </div>
 
@@ -138,7 +158,7 @@ export default function WishlistDetailPage() {
         {isCustom && (
           <input
             type="number"
-            placeholder="Enter amount (€)"
+            placeholder="Enter amount ($)"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className="w-full p-3 mb-3 bg-purple-900/40 border border-pink-400 rounded-xl text-white placeholder-gray-300 outline-none"

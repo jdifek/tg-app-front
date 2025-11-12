@@ -9,6 +9,8 @@ interface GirlData {
   banner: string;
   logo: string;
   tgLink: string;
+  link: string;
+  name: string;
 }
 
 export default function Header() {
@@ -42,33 +44,39 @@ export default function Header() {
       console.log("No Telegram link available");
     }
   };
-
-  const handleMessageClick = async () => {
-    if (girl?.tgLink) {
-      try {
-        await navigator.clipboard.writeText(girl.tgLink);
-        setToast("Telegram link copied ✅");
-        setTimeout(() => setToast(""), 2000);
-      } catch (err) {
-        console.error("Failed to copy:", err);
-      }
+  const handleMessageClick = () => {
+    if (!girl?.link) {
+      console.warn("Link is not available");
+      return;
     }
+  
+    // Telegram MiniApp
+    if (window.Telegram?.WebApp?.openLink) {
+      window.Telegram.WebApp.openLink(girl.link);
+      console.log("Opened link via Telegram WebApp");
+      return;
+    }
+  
+    // Обычный браузер: откроем в новой вкладке
+    window.open(girl.link, "_blank");
+    console.log("Opened link in browser fallback");
   };
-
+  
   return (
     <div className="relative">
       {/* Баннер */}
       <div className="h-32 relative overflow-hidden">
-        <Image
-          src={
-            girl?.banner ||
-            "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1200"
-          }
-          alt="Profile Banner"
-          width={1200}
-          height={300}
-          className="w-full h-full object-cover"
-        />
+        {girl?.banner ? (
+          <Image
+            src={girl.banner}
+            alt="Profile Banner"
+            width={1200}
+            height={300}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200 animate-pulse" />
+        )}
       </div>
 
       {/* Профиль */}
@@ -78,17 +86,19 @@ export default function Header() {
             {/* Аватар */}
             <div className="relative">
               <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-1">
-                <Image
-                  src={
-                    girl?.logo ||
-                    "https://img.freepik.com/free-photo/attractive-positive-elegant-young-woman-cafe_23-2148071691.jpg?semt=ais_hybrid&w=740&q=80"
-                  }
-                  alt="Profile"
-                  width={80}
-                  height={80}
-                  className="w-full h-full rounded-full object-cover bg-gray-800"
-                />
+                {girl?.logo ? (
+                  <Image
+                    src={girl.logo}
+                    alt="Profile"
+                    width={80}
+                    height={80}
+                    className="w-full h-full rounded-full object-cover bg-gray-800"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-gray-200 animate-pulse" />
+                )}
               </div>
+
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                 <svg
                   className="w-3 h-3 text-white"
@@ -102,8 +112,8 @@ export default function Header() {
 
             {/* Имя и юзернейм */}
             <div className="pb-2">
-              <h1 className="text-xl font-bold text-white">TASHA MENDI</h1>
-              <p className="text-gray-300 text-sm">@TashaMendi</p>
+              <h1 className="text-xl font-bold text-white">{girl && girl.name}</h1>
+              <p className="text-gray-300 text-sm">{girl && girl.tgLink}</p>
             </div>
           </div>
 
