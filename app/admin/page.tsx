@@ -46,7 +46,13 @@ export default function AdminPage() {
   const [message, setMessage] = useState("");
 
   // ✅ State для Girl
-  const [girl, setGirl] = useState({ banner: "", logo: "", tgLink: "" });
+  const [girl, setGirl] = useState({
+    banner: "",
+    logo: "",
+    tgLink: "",
+    name: "",
+    link: "",
+  });
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [loadingGirl, setLoadingGirl] = useState(false);
@@ -117,6 +123,8 @@ export default function AdminPage() {
       if (bannerFile) formData.append("banner", bannerFile);
       if (logoFile) formData.append("logo", logoFile);
       formData.append("tgLink", girl.tgLink);
+      formData.append("name", girl.name);
+formData.append("link", girl.link);
 
       const res = await apiFetch("/api/girl", {
         method: "PATCH",
@@ -295,6 +303,34 @@ export default function AdminPage() {
               placeholder="@username"
             />
           </div>
+          {/* Name */}
+<div className="mb-4">
+  <label className="block text-white mb-1">Name</label>
+  <input
+    type="text"
+    value={girl.name}
+    onChange={(e) =>
+      setGirl((prev) => ({ ...prev, name: e.target.value }))
+    }
+    className="w-full p-2 rounded bg-gray-800 text-white"
+    placeholder="Enter name"
+  />
+</div>
+
+{/* Link */}
+<div className="mb-4">
+  <label className="block text-white mb-1">Link</label>
+  <input
+    type="text"
+    value={girl.link}
+    onChange={(e) =>
+      setGirl((prev) => ({ ...prev, link: e.target.value }))
+    }
+    className="w-full p-2 rounded bg-gray-800 text-white"
+    placeholder="Enter link"
+  />
+</div>
+
 
           <button
             onClick={handleSaveGirl}
