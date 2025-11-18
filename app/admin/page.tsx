@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Package, ShoppingBag, Heart, ShoppingCart } from "lucide-react";
+import {
+  Package,
+  ShoppingBag,
+  Heart,
+  ShoppingCart,
+  ArrowLeft,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "../http";
 
@@ -124,7 +130,7 @@ export default function AdminPage() {
       if (logoFile) formData.append("logo", logoFile);
       formData.append("tgLink", girl.tgLink);
       formData.append("name", girl.name);
-formData.append("link", girl.link);
+      formData.append("link", girl.link);
 
       const res = await apiFetch("/api/girl", {
         method: "PATCH",
@@ -149,7 +155,15 @@ formData.append("link", girl.link);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black">
+    
       <div className="max-w-4xl mx-auto p-6">
+      <button
+        onClick={() => router.push("/")}
+        className="flex items-center justify-center space-x-2 text-gray-300 hover:text-white transition-colors"
+      >
+        <ArrowLeft className="w-8 h-8" />
+        <span>Back</span>
+      </button>
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Admin Panel</h1>
           <p className="text-gray-400">Manage your shop content and orders</p>
@@ -304,33 +318,32 @@ formData.append("link", girl.link);
             />
           </div>
           {/* Name */}
-<div className="mb-4">
-  <label className="block text-white mb-1">Name</label>
-  <input
-    type="text"
-    value={girl.name}
-    onChange={(e) =>
-      setGirl((prev) => ({ ...prev, name: e.target.value }))
-    }
-    className="w-full p-2 rounded bg-gray-800 text-white"
-    placeholder="Enter name"
-  />
-</div>
+          <div className="mb-4">
+            <label className="block text-white mb-1">Name</label>
+            <input
+              type="text"
+              value={girl.name}
+              onChange={(e) =>
+                setGirl((prev) => ({ ...prev, name: e.target.value }))
+              }
+              className="w-full p-2 rounded bg-gray-800 text-white"
+              placeholder="Enter name"
+            />
+          </div>
 
-{/* Link */}
-<div className="mb-4">
-  <label className="block text-white mb-1">Link</label>
-  <input
-    type="text"
-    value={girl.link}
-    onChange={(e) =>
-      setGirl((prev) => ({ ...prev, link: e.target.value }))
-    }
-    className="w-full p-2 rounded bg-gray-800 text-white"
-    placeholder="Enter link"
-  />
-</div>
-
+          {/* Link */}
+          <div className="mb-4">
+            <label className="block text-white mb-1">Link</label>
+            <input
+              type="text"
+              value={girl.link}
+              onChange={(e) =>
+                setGirl((prev) => ({ ...prev, link: e.target.value }))
+              }
+              className="w-full p-2 rounded bg-gray-800 text-white"
+              placeholder="Enter link"
+            />
+          </div>
 
           <button
             onClick={handleSaveGirl}

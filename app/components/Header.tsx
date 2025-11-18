@@ -122,14 +122,14 @@ export default function Header() {
             <button
               onClick={handleMessageClick}
               className="bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-lg p-2 hover:bg-white hover:bg-opacity-20 transition-colors"
-              title="Open Telegram"
+              title="Open link"
             >
               <LinkIcon className="w-5 h-5 text-purple-400" />
             </button>
             <button
               onClick={handleSocialClick}
               className="bg-purple-600 hover:bg-purple-700 rounded-lg p-2 transition-colors"
-              title="Copy Telegram link"
+              title="Open chat"
             >
               <MessageCircle className="w-5 h-5 text-white" />
             </button>

@@ -63,7 +63,7 @@ export default function WishlistDetailPage() {
   }
 
   return (
-    <div className="px-4 mt-8 pb-10 flex flex-col bg-black items-center text-center">
+    <div className="flex flex-col bg-black items-center text-center">
       {/* Image */}
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
         <button
@@ -170,7 +170,7 @@ export default function WishlistDetailPage() {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Message..."
-          className="w-full h-28 p-3 bg-purple-900/40 border border-pink-400 rounded-xl text-white placeholder-gray-300 mb-3 outline-none resize-none"
+          className="w-[300px] mx-auto  h-28 p-3 bg-purple-900/40 border border-pink-400 rounded-xl text-white placeholder-gray-300 mb-3 outline-none resize-none"
         />
       </div>
 
@@ -183,7 +183,7 @@ export default function WishlistDetailPage() {
       </button>
 
       {/* Created date */}
-      <p className="text-xs text-gray-500 mt-6">
+      <p className="text-xs text-gray-500 my-6">
         Created at: {new Date(item.createdAt).toLocaleDateString()}
       </p>
     </div>

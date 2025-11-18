@@ -95,14 +95,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 //test
     // Фолбек: хардкод
-    // const hardcodedUser = {
-    //   id: "5969166369",
-    //   first_name: "Денис",
-    //   username: "denis_nickname",
-    //   photo_url:
-    //     "https://t.me/i/userpic/320/ArOpXH92rj_EpmqJ6uB_-vEugbCinOd3VU8tLlkf5DSxI8r40DuBCgyZH4VxImpQ.svg",
-    // };
-    // handleLogin(hardcodedUser);
+    const hardcodedUser = {
+      id: "5969166369",
+      first_name: "Денис",
+      username: "denis_nickname",
+      photo_url:
+        "https://t.me/i/userpic/320/ArOpXH92rj_EpmqJ6uB_-vEugbCinOd3VU8tLlkf5DSxI8r40DuBCgyZH4VxImpQ.svg",
+    };
+    handleLogin(hardcodedUser);
   }, []);
 
   return (
