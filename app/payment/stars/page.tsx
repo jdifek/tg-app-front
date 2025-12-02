@@ -12,14 +12,19 @@ export const dynamic = "force-dynamic";
 function StarsPayPageContent() {
   const router = useRouter();
   const { user } = useUser();
-  
 
   const searchParams = useSearchParams();
   const [starsPrice, setStarsPrice] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isTelegramAvailable, setIsTelegramAvailable] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
-  const type = searchParams.get("type"); // "product" или "bundle"
+
+  // ✅ Получаем параметры из URL
+  const type = searchParams.get("type");
+  const id = searchParams.get("id");
+  const message = searchParams.get("message");
+  const shippingParam = searchParams.get("shipping");
+  const shippingData = shippingParam ? JSON.parse(shippingParam) : {};
 
   const priceUSD = searchParams.get("price")
     ? parseFloat(searchParams.get("price")!)
@@ -48,7 +53,6 @@ function StarsPayPageContent() {
     }
   }, [priceUSD]);
 
-  // Check payment status periodically after invoice is opened
   useEffect(() => {
     if (!orderId) {
       console.log("⚠️ No orderId, skipping payment check");
@@ -64,7 +68,7 @@ function StarsPayPageContent() {
       try {
         console.log("🔄 Checking payment status...");
         const res = await apiFetch(`/api/orders/detail/${orderId}`);
-        
+
         if (!res.ok) {
           console.error("❌ Failed to fetch order");
           return false;
@@ -92,12 +96,10 @@ function StarsPayPageContent() {
       }
     };
 
-    // Check immediately after 1 second
     const initialCheck = setTimeout(() => {
       checkPaymentStatus();
     }, 1000);
 
-    // Then check every 2 seconds for up to 5 minutes
     let checks = 0;
     const interval = setInterval(async () => {
       checks++;
@@ -139,8 +141,14 @@ function StarsPayPageContent() {
 
     try {
       setIsLoading(true);
-      console.log("Creating invoice for Stars...", starsPrice);
+      console.log("🌟 Creating Stars invoice...", {
+        type,
+        id,
+        starsPrice,
+        message,
+      });
 
+      // ✅ СОЗДАЕМ ЗАКАЗ С items (один раз!)
       const res = await apiFetch("/api/orders/stars", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -150,21 +158,34 @@ function StarsPayPageContent() {
           description: `Purchase for ${starsPrice} Stars`,
           amount: starsPrice,
           orderType:
-          type === "product"
-            ? "PRODUCT"
-            : type === "bundle"
-            ? "BUNDLE"
-            : type === "vip"
-            ? "VIP"
-            : type === "custom_video"
-            ? "CUSTOM_VIDEO"
-            : type === "video_call"
-            ? "VIDEO_CALL"
-            : type === "rating"
-            ? "RATING"
-            : type === "donation"
-            ? "DONATION"
-            : "PRODUCT",
+            type === "product"
+              ? "PRODUCT"
+              : type === "bundle"
+              ? "BUNDLE"
+              : type === "vip"
+              ? "VIP"
+              : type === "custom_video"
+              ? "CUSTOM_VIDEO"
+              : type === "video_call"
+              ? "VIDEO_CALL"
+              : type === "rating"
+              ? "RATING"
+              : type === "donation"
+              ? "DONATION"
+              : "PRODUCT",
+          donationMessage: message || null,
+          // ✅ ПЕРЕДАЕМ items для создания orderItems
+          items:
+            type === "product" || type === "bundle"
+              ? [
+                  {
+                    id: id,
+                    type: type,
+                    quantity: 1,
+                    price: priceUSD,
+                  },
+                ]
+              : undefined,
         }),
       });
 
@@ -182,13 +203,11 @@ function StarsPayPageContent() {
       console.log("✅ Invoice received:", data.invoice_url);
       console.log("📦 Order ID:", data.order_id);
 
-      // Save order ID for status checking
       setOrderId(data.order_id);
 
       const invoiceUrl = data.invoice_url;
       let invoiceSlug = null;
 
-      // Extract slug from different URL formats
       if (invoiceUrl.includes("/invoice/")) {
         invoiceSlug = invoiceUrl.split("/invoice/")[1].split("?")[0];
       } else if (invoiceUrl.includes("start=")) {
@@ -201,7 +220,6 @@ function StarsPayPageContent() {
       console.log("Invoice slug:", invoiceSlug);
 
       if (invoiceSlug && window.Telegram?.WebApp?.openInvoice) {
-        // Open payment form
         window.Telegram.WebApp.openInvoice(invoiceSlug, () => {
           console.log("Payment form closed");
           toast("Checking payment status...", { icon: "🔍" });
@@ -209,7 +227,6 @@ function StarsPayPageContent() {
 
         toast("Opening payment form...", { icon: "💫" });
       } else {
-        // Fallback: open in Telegram
         console.warn("Using fallback link method");
         if (window.Telegram?.WebApp?.openTelegramLink) {
           window.Telegram.WebApp.openTelegramLink(invoiceUrl);
@@ -234,7 +251,6 @@ function StarsPayPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-indigo-900 to-black text-white">
-      {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
         <button
           onClick={() => router.back()}
@@ -250,7 +266,6 @@ function StarsPayPageContent() {
         <div className="w-10" />
       </div>
 
-      {/* Content */}
       <div className="max-w-md mx-auto p-5">
         <div className="bg-gray-900 bg-opacity-50 border border-indigo-500 rounded-2xl p-5">
           <h2 className="text-lg font-semibold text-indigo-400 mb-3">
@@ -272,7 +287,6 @@ function StarsPayPageContent() {
           </p>
         </div>
 
-        {/* Pay Button */}
         <button
           onClick={handleTelegramPay}
           disabled={isLoading || !isTelegramAvailable}
@@ -292,7 +306,6 @@ function StarsPayPageContent() {
           )}
         </button>
 
-        {/* Payment verification info */}
         {isLoading && orderId && (
           <div className="mt-4 p-3 bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg">
             <p className="text-sm text-blue-300 text-center">
@@ -305,7 +318,6 @@ function StarsPayPageContent() {
           </div>
         )}
 
-        {/* Additional Info */}
         <div className="mt-5 p-4 bg-gray-800 bg-opacity-50 rounded-xl">
           <h3 className="text-sm font-semibold text-gray-300 mb-2">
             📌 Important Information:

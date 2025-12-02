@@ -11,15 +11,16 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "../http";
 import { useUser } from "../context/UserContext";
+
 export enum PaymentMethod {
-  CARD_CRYPTO = "card", // Tribute (Card/Crypto)
-  USDT_TRC20 = "usdt", // Оплата в USDT (TRC20)
-  PAYPAL = "paypal", // PayPal
-  DONATION = "donation", // DONATION
-  STARS = "stars", // Telegram Stars
-  MANUAL = "MANUAL", // Ручная оплата
+  CARD_CRYPTO = "card",
+  USDT_TRC20 = "usdt",
+  PAYPAL = "paypal",
+  DONATION = "donation",
+  STARS = "stars",
+  MANUAL = "MANUAL",
 }
-// ✅ Оборачиваем компонент в Suspense
+
 export default function PaymentPageWrapper() {
   return (
     <Suspense
@@ -34,18 +35,18 @@ function PaymentPage() {
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useUser();
-
   const [selectedMethod, setSelectedMethod] = useState("");
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const type = searchParams.get("type"); // "product" или "bundle"
-  const id = searchParams.get("id"); // id товара или бандла
+  const type = searchParams.get("type");
+  const id = searchParams.get("id");
   const priceParam = searchParams.get("price");
   const message = searchParams.get("message");
   const totalPrice = priceParam ? parseFloat(priceParam) : 0;
   const shippingParam = searchParams.get("shipping");
   const shippingData = shippingParam ? JSON.parse(shippingParam) : {};
+
   const mapPaymentMethodToBackend = (method: PaymentMethod) => {
     switch (method) {
       case PaymentMethod.CARD_CRYPTO:
@@ -64,10 +65,11 @@ function PaymentPage() {
         return "MANUAL";
     }
   };
+
   useEffect(() => {
     if (type === "donation") {
       setOrder({
-        id: null, // или можно сгенерировать временный id
+        id: null,
         total: totalPrice,
         items: [{ name: "Donation", price: totalPrice }],
       });
@@ -115,7 +117,6 @@ function PaymentPage() {
       color: "from-yellow-500 to-orange-600",
     },
   ];
-  
 
   const handlePayment = async (methodId: PaymentMethod) => {
     if (type !== "donation" && (!id || !type)) {
@@ -125,6 +126,34 @@ function PaymentPage() {
     setSelectedMethod(methodId);
 
     try {
+      // ✅ ДЛЯ STARS: просто переходим на страницу оплаты БЕЗ создания заказа
+      if (methodId === PaymentMethod.STARS) {
+        console.log("🌟 Redirecting to Stars payment page...");
+        
+        // Формируем URL с параметрами
+        const params = new URLSearchParams({
+          type: type || "",
+          id: id || "",
+          price: totalPrice.toString(),
+        });
+
+        // Добавляем message если есть
+        if (message) {
+          params.append("message", message);
+        }
+
+        // Добавляем shipping если есть
+        if (Object.keys(shippingData).length > 0) {
+          params.append("shipping", JSON.stringify(shippingData));
+        }
+
+        router.push(`/payment/stars?${params.toString()}`);
+        return; // ⚠️ ВАЖНО: выходим здесь, не создаем заказ
+      }
+
+      // ✅ ДЛЯ ОСТАЛЬНЫХ МЕТОДОВ: создаем заказ как раньше
+      console.log(`💳 Creating order for payment method: ${methodId}`);
+
       const orderData = {
         userId: user.id,
         telegramId: user.telegramId,
@@ -184,6 +213,7 @@ function PaymentPage() {
     } catch (error) {
       console.error("Payment creation failed:", error);
       alert("Failed to create payment. Please try again.");
+      setSelectedMethod(""); // Сбрасываем состояние
     }
   };
 
